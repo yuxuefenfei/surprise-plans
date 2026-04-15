@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>专属信件 - [姓名]</title>
+    <style>
+        body {
+            margin: 0; background:
+                radial-gradient(circle at 50% 35%, rgba(232, 165, 165, 0.18), transparent 28%),
+                radial-gradient(circle at 50% 65%, rgba(255, 235, 210, 0.08), transparent 32%),
+                #2c2125;
+            display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: 'Georgia', serif;
+        }
+        
+        .container {
+            position: relative; width: 300px; height: 200px; perspective: 1200px; cursor: pointer;
+            transition: transform 0.5s; transform-style: preserve-3d;
+        }
+        .container:hover { transform: translateY(-10px); }
+        .container.open:hover,
+        .container.closing:hover { transform: none; }
+        
+        /* Envelope Back */
+        .envelope-back {
+            position: absolute; width: 100%; height: 100%; background: #d37373; border-radius: 5px 5px 0 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 1;
+        }
+
+        /* Letter Inside */
+        .letter-slot {
+            position: absolute;
+            inset: 0;
+            overflow: visible;
+            clip-path: inset(0 0 0 0);
+            z-index: 2;
+        }
+        .letter {
+            position: absolute; top: 10px; left: 10px; right: 10px; height: 180px;
+            background: #fffdf8; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            transition: top 0.9s cubic-bezier(0.22, 1, 0.36, 1), height 0.75s ease, box-shadow 0.75s ease;
+            z-index: 2; padding: 20px; box-sizing: border-box; text-align: center; overflow: hidden; will-change: top, height;
+        }
+        .letter h3 { color: #d37373; margin-top: 10px; font-family: 'Segoe UI', cursive; }
+        .letter p { color: #555; line-height: 1.6; font-size: 0.9rem; }
+        .letter h3,
+        .letter p {
+            opacity: 0;
+            transform: translateY(12px);
+            transition: opacity 0.45s ease, transform 0.45s ease;
+        }
+
+        /* Envelope Front Cover */
+        .envelope-front {
+            position: absolute; top: 0; left: 0; width: 0; height: 0;
+            border-top: 100px solid transparent; border-right: 150px solid #c56565; border-bottom: 100px solid #b35151; border-left: 150px solid #c56565; z-index: 3; pointer-events: none;
+        }
+
+        /* Envelope Flap */
+        .flap {
+            position: absolute; top: 0; left: 0; width: 0; height: 0;
+            border-left: 150px solid transparent; border-right: 150px solid transparent; border-top: 100px solid #e28080;
+            transform-origin: 50% 0; transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1), z-index 0s; z-index: 4; pointer-events: none;
+            will-change: transform;
+        }
+
+        /* Opened State */
+        .container.open .flap {
+            transform: rotateX(180deg);
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.16s, z-index 0s 0.35s;
+            z-index: 1;
+        }
+        .container.open .letter-slot {
+            clip-path: inset(-400px 0 0 0);
+        }
+        .container.open .letter {
+            top: -240px;
+            transition-delay: 1.0s;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+            height: 380px;
+            z-index: 5;
+        }
+        .container.closing .flap {
+            transform: rotateX(180deg);
+            transition-delay: 0s;
+            z-index: 1;
+        }
+        .container.closing .letter-slot {
+            clip-path: inset(-400px 0 0 0);
+        }
+        .container.closing .letter {
+            top: 10px;
+            transition-delay: 0s;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            height: 180px;
+            z-index: 2;
+        }
+        .container.open .letter h3,
+        .container.open .letter p {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .container.open .letter h3 { transition-delay: 1.5s; }
+        .container.open .letter p:nth-of-type(1) { transition-delay: 1.6s; }
+        .container.open .letter p:nth-of-type(2) { transition-delay: 1.7s; }
+        .container.open .letter p:nth-of-type(3) { transition-delay: 1.8s; }
+        .container.closing .letter h3,
+        .container.closing .letter p {
+            opacity: 0;
+            transform: translateY(12px);
+            transition-delay: 0s !important;
+        }
+
+        .hint {
+            position: absolute; bottom: -50px; left: 0; width: 100%; text-align: center;
+            color: rgba(255,255,255,0.5); letter-spacing: 2px; transition: opacity 0.35s ease;
+        }
+
+        /* Heart Wax Seal */
+        .seal {
+            position: absolute; top: 80px; left: 130px; width: 40px; height: 40px; background: #b01a1a;
+            border-radius: 50%; z-index: 5; box-shadow: 0 2px 5px rgba(0,0,0,0.3); display: flex; justify-content: center; align-items: center;
+            transition: opacity 0.22s ease, transform 0.22s ease; pointer-events: none;
+        }
+        .seal::after { content: '❤'; color: #ffd6d6; font-size: 20px; }
+        .container.open .seal,
+        .container.closing .seal { opacity: 0; transform: scale(0.55); pointer-events: none; }
+
+        /* Modal */
+        .info-btn { position: fixed; top: 30px; right: 30px; z-index: 20; border: 1px solid rgba(255,255,255,0.3); padding: 8px 16px; border-radius: 20px; cursor: pointer; color: white; background: transparent; }
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(50,30,40,0.95); border: 1px solid #d37373; padding: 30px; border-radius: 15px; z-index: 30; text-align: center; max-width: 300px; color: white;}
+        .close-btn { margin-top: 20px; padding: 8px 24px; background: #d37373; border: none; color: white; border-radius: 20px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="info-btn" id="openModal">📖 寓意</div>
+    <div class="modal" id="modal">
+        <h2 style="color:#d37373; margin-top:0;" id="modalTitle"></h2>
+        <p id="modalDesc"></p>
+        <button class="close-btn" id="closeModal">关闭</button>
+    </div>
+
+    <div class="container" id="mail">
+        <div class="envelope-back"></div>
+        <div class="letter-slot">
+            <div class="letter" id="letterInner">
+            </div>
+        </div>
+        <div class="envelope-front"></div>
+        <div class="flap"></div>
+        <div class="seal"></div>
+        <div class="hint">点击信封拆开惊喜</div>
+    </div>
+
+    <script>
+        const CONFIG = {
+            modalTitle: '专属信件',
+            modalDesc: '在任何心意都可以被瞬间发送的年代，我依然固执地想用一封盖着火漆印的复古信封，郑重其事地将我最诚挚的偏爱交到你手上。',
+            letterTitle: '致 我的[姓名]',
+            letterParagraphs: [
+                '遇见你的那一刻，<br>就像是平淡生活里照进了一束光。',
+                '愿那个被认真偏爱的人，<br>能一直开心、快乐。',
+                '<span style="display:block; text-align:right; margin-top:20px;">—— 爱你的某人</span>'
+            ]
+        };
+
+        document.getElementById('modalTitle').innerText = CONFIG.modalTitle;
+        document.getElementById('modalDesc').innerText = CONFIG.modalDesc;
+
+        const letterInner = document.getElementById('letterInner');
+        let html = `<h3>${CONFIG.letterTitle}</h3>`;
+        CONFIG.letterParagraphs.forEach((p, index) => {
+            html += `<p style="transition-delay: ${1.6 + index * 0.15}s;">${p}</p>`;
+        });
+        letterInner.innerHTML = html;
+
+        const mail = document.getElementById('mail');
+        const hint = document.querySelector('.hint');
+        
+        document.getElementById('openModal').addEventListener('click', () => document.getElementById('modal').style.display = 'block');
+        document.getElementById('closeModal').addEventListener('click', () => document.getElementById('modal').style.display = 'none');
+
+        let phaseTimer = null;
+        let mailState = 'closed';
+
+        mail.addEventListener('click', function() {
+            clearTimeout(phaseTimer);
+
+            if (mailState === 'open') {
+                mailState = 'closing';
+                this.classList.add('closing');
+                hint.style.opacity = '1';
+
+                phaseTimer = setTimeout(() => {
+                    this.classList.remove('closing', 'open');
+                    mailState = 'closed';
+                }, 1000);
+                return;
+            }
+
+            if (mailState !== 'closed') {
+                return;
+            }
+
+            this.classList.remove('closing');
+            this.classList.add('open');
+            mailState = 'open';
+            hint.style.opacity = '0';
+        });
+    </script>
+</body>
+</html>

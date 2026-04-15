@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0d0610">
+    <title>给你的秘密宇宙</title>
+    <style>
+        :root {
+            --c-bg-deep:    #0d0610;
+            --c-bg-mid:     #160c1f;
+            --c-rose:       #ff3d6a;
+            --c-rose-dark:  #ea0037;
+            --c-rose-light: #ff7a9e;
+            --c-text:       #fff0f5;
+            --c-text-dim:   rgba(255, 220, 234, 0.78);
+            --c-glass:      rgba(255, 255, 255, 0.055);
+            --c-border:     rgba(255, 255, 255, 0.13);
+            --radius-card:  24px;
+            --radius-pill:  999px;
+            --font-main:    'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            min-height: 100svh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            font-family: var(--font-main);
+            color: var(--c-text);
+            background:
+                radial-gradient(ellipse at 30% 20%, rgba(255, 80, 140, 0.16) 0%, transparent 50%),
+                radial-gradient(ellipse at 75% 80%, rgba(180, 40, 100, 0.13) 0%, transparent 45%),
+                linear-gradient(160deg, var(--c-bg-deep) 0%, #1a0b26 50%, var(--c-bg-deep) 100%);
+            animation: pageIn 0.7s ease both;
+        }
+
+        @keyframes pageIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── 星星背景 ── */
+        .stars {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .stars::before,
+        .stars::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+        }
+        .stars::before {
+            background-image:
+                radial-gradient(circle, rgba(255,255,255,0.92) 0.5px, transparent 1px),
+                radial-gradient(circle, rgba(255,255,255,0.7)  0.5px, transparent 1px),
+                radial-gradient(circle, rgba(255,200,220,0.8)  0.5px, transparent 1px),
+                radial-gradient(circle, rgba(255,255,255,0.6)  0.5px, transparent 1px),
+                radial-gradient(circle, rgba(255,255,255,0.85) 0.5px, transparent 1px),
+                radial-gradient(circle, rgba(255,180,200,0.7)  0.5px, transparent 1px);
+            background-size:
+                320px 350px, 250px 280px, 400px 420px,
+                180px 200px, 290px 310px, 370px 390px;
+            background-position:
+                40px 60px, 130px 180px, 60px 300px,
+                210px 80px, 310px 240px, 180px 390px;
+            animation: twinkle 6s ease-in-out infinite alternate;
+        }
+        .stars::after {
+            background-image:
+                radial-gradient(circle, rgba(255,255,255,0.65) 0.5px, transparent 1px),
+                radial-gradient(circle, rgba(255,210,230,0.5)  0.5px, transparent 1px),
+                radial-gradient(circle, rgba(255,255,255,0.8)  0.5px, transparent 1px),
+                radial-gradient(circle, rgba(255,255,255,0.55) 0.5px, transparent 1px);
+            background-size:
+                270px 290px, 340px 360px, 210px 230px, 450px 470px;
+            background-position:
+                90px 140px, 200px 310px, 350px 50px, 80px 420px;
+            animation: twinkle 8s ease-in-out infinite alternate-reverse;
+        }
+
+        @keyframes twinkle {
+            from { opacity: 0.45; }
+            to   { opacity: 0.95; }
+        }
+
+        /* ── 主卡片 ── */
+        .card {
+            position: relative;
+            z-index: 1;
+            width: min(92vw, 680px);
+            padding: 52px 32px;
+            border: 1px solid var(--c-border);
+            border-radius: var(--radius-card);
+            text-align: center;
+            background: rgba(14, 8, 22, 0.64);
+            box-shadow:
+                0 0 0 1px rgba(255, 80, 140, 0.06),
+                0 24px 64px rgba(0, 0, 0, 0.42),
+                inset 0 1px 0 rgba(255,255,255,0.06);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        .eyebrow {
+            color: var(--c-rose-light);
+            font-size: 0.78rem;
+            letter-spacing: 0.32rem;
+            text-transform: uppercase;
+            opacity: 0.82;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: clamp(2.2rem, 7.5vw, 4.4rem);
+            font-weight: 300;
+            letter-spacing: 0.18rem;
+            line-height: 1.2;
+            background: linear-gradient(135deg, #fff0f5 0%, var(--c-rose-light) 55%, var(--c-rose) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 22px;
+        }
+
+        .subtitle {
+            max-width: 460px;
+            margin: 0 auto 14px;
+            color: var(--c-text-dim);
+            font-size: 1rem;
+            line-height: 1.95;
+        }
+
+        .note {
+            max-width: 400px;
+            margin: 0 auto 36px;
+            color: rgba(255, 200, 220, 0.58);
+            font-size: 0.88rem;
+            line-height: 1.85;
+        }
+
+        .start-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px 38px;
+            border-radius: var(--radius-pill);
+            border: 1px solid rgba(255, 140, 180, 0.55);
+            color: #fff;
+            text-decoration: none;
+            font-size: 0.98rem;
+            letter-spacing: 0.06rem;
+            background: linear-gradient(135deg, rgba(255, 61, 106, 0.88), rgba(255, 110, 170, 0.82));
+            box-shadow:
+                0 0 0 0 rgba(255, 61, 106, 0),
+                0 12px 32px rgba(255, 61, 106, 0.3);
+            transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow:
+                0 0 20px rgba(255, 61, 106, 0.25),
+                0 16px 36px rgba(255, 61, 106, 0.36);
+        }
+
+        .start-btn:active {
+            transform: translateY(0);
+        }
+
+        .start-btn .arrow {
+            transition: transform 0.22s ease;
+            font-style: normal;
+        }
+
+        .start-btn:hover .arrow {
+            transform: translateX(3px);
+        }
+
+        /* ── 装饰光晕 ── */
+        .glow {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            filter: blur(60px);
+            z-index: -1;
+        }
+        .glow-1 {
+            width: 280px; height: 280px;
+            top: -80px; right: -60px;
+            background: rgba(255, 61, 106, 0.12);
+        }
+        .glow-2 {
+            width: 240px; height: 240px;
+            bottom: -70px; left: -50px;
+            background: rgba(180, 40, 120, 0.1);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            body { animation: none; }
+            .stars::before, .stars::after { animation: none; }
+        }
+
+        @media (max-width: 520px) {
+            .card {
+                padding: 40px 22px;
+                border-radius: 20px;
+            }
+            .eyebrow { letter-spacing: 0.2rem; }
+            .subtitle, .note { font-size: 0.92rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="stars" aria-hidden="true"></div>
+    <main class="card">
+        <div class="glow glow-1" aria-hidden="true"></div>
+        <div class="glow glow-2" aria-hidden="true"></div>
+        <p class="eyebrow">For You, With Love</p>
+        <h1>给你的秘密宇宙</h1>
+        <p class="subtitle">后来我才发现，喜欢一个人原来会慢慢长进日常里。<br>不是某个突然的瞬间，而是越来越自然地，什么都想先说给你听。</p>
+        <p class="note">所以这几页不算盛大的告白，更像我把平时没来得及说完的偏爱，一点一点补给你。</p>
+        <a class="start-btn" href="./01-password.html" id="startBtn">
+            点我开始 <em class="arrow">→</em>
+        </a>
+    </main>
+</body>
+</html>

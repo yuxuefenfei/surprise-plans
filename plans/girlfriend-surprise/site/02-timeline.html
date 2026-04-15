@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0d0610">
+    <title>给你的秘密宇宙 · 时光轴</title>
+    <style>
+        :root {
+            --c-bg-deep:    #0d0610;
+            --c-rose:       #ff3d6a;
+            --c-rose-dark:  #ea0037;
+            --c-rose-light: #ff7a9e;
+            --c-text:       #fff0f5;
+            --c-text-dim:   rgba(255, 220, 234, 0.78);
+            --c-glass:      rgba(255, 255, 255, 0.05);
+            --c-border:     rgba(255, 255, 255, 0.12);
+            --radius-card:  20px;
+            --radius-pill:  999px;
+            --font-main:    'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background:
+                radial-gradient(ellipse at 60% 10%, rgba(255, 61, 106, 0.13) 0%, transparent 50%),
+                radial-gradient(ellipse at 20% 90%, rgba(160, 30, 80, 0.1) 0%, transparent 45%),
+                linear-gradient(160deg, var(--c-bg-deep) 0%, #160b22 55%, #080310 100%);
+            color: var(--c-text);
+            font-family: var(--font-main);
+            overflow-x: hidden;
+            min-height: 100vh;
+            animation: pageIn 0.65s ease both;
+        }
+
+        @keyframes pageIn {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+
+        /* ── 星空背景（纯CSS，无JS，性能好） ── */
+        .stars-bg {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        .stars-bg::before,
+        .stars-bg::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+        }
+        .stars-bg::before {
+            background-image:
+                radial-gradient(circle, rgba(255,255,255,0.88) 0.5px, transparent 1px),
+                radial-gradient(circle, rgba(255,200,218,0.7)  0.5px, transparent 1px),
+                radial-gradient(circle, rgba(255,255,255,0.6)  0.5px, transparent 1px),
+                radial-gradient(circle, rgba(255,255,255,0.75) 0.5px, transparent 1px),
+                radial-gradient(circle, rgba(255,180,205,0.65) 0.5px, transparent 1px);
+            background-size: 310px 330px, 240px 270px, 390px 410px, 170px 195px, 280px 305px;
+            background-position: 38px 55px, 120px 170px, 55px 290px, 200px 75px, 300px 235px;
+            animation: twinkle 7s ease-in-out infinite alternate;
+        }
+        .stars-bg::after {
+            background-image:
+                radial-gradient(circle, rgba(255,255,255,0.6)  0.5px, transparent 1px),
+                radial-gradient(circle, rgba(255,210,228,0.5)  0.5px, transparent 1px),
+                radial-gradient(circle, rgba(255,255,255,0.72) 0.5px, transparent 1px);
+            background-size: 260px 285px, 330px 355px, 205px 225px;
+            background-position: 85px 135px, 195px 305px, 345px 45px;
+            animation: twinkle 9s ease-in-out infinite alternate-reverse;
+        }
+        @keyframes twinkle {
+            from { opacity: 0.4; }
+            to   { opacity: 0.9; }
+        }
+
+        /* ── Hero ── */
+        .hero {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            min-height: 100svh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 80px 24px 48px;
+            text-align: center;
+        }
+
+        /* ── 心形按钮 ── */
+        .heart-btn {
+            position: relative;
+            width: 80px; height: 80px;
+            background: var(--c-rose);
+            transform: rotate(-45deg);
+            cursor: pointer;
+            border: none;
+            padding: 0;
+            border-radius: 2px;
+            box-shadow: 0 0 36px rgba(255, 61, 106, 0.6), 0 0 70px rgba(255, 61, 106, 0.25);
+            animation: heartbeat 1.3s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+            will-change: transform;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .heart-btn:focus-visible {
+            outline: 2px solid rgba(255,255,255,0.9);
+            outline-offset: 14px;
+        }
+        .heart-btn::before, .heart-btn::after {
+            content: ''; position: absolute;
+            width: 80px; height: 80px;
+            background: inherit; border-radius: 50%;
+        }
+        .heart-btn::before { top: -40px; left: 0; }
+        .heart-btn::after  { top: 0; left: 40px; }
+
+        @keyframes heartbeat {
+            0%, 35%, 70%, 100% { transform: rotate(-45deg) scale(1); }
+            17%                { transform: rotate(-45deg) scale(1.16); }
+        }
+
+        .hero-title {
+            margin-top: 52px;
+            font-size: clamp(1.9rem, 6vw, 3.1rem);
+            font-weight: 300;
+            letter-spacing: 0.18rem;
+            background: linear-gradient(135deg, var(--c-text) 0%, var(--c-rose-light) 60%, var(--c-rose) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hint {
+            margin-top: 18px;
+            font-size: 0.93rem;
+            color: rgba(215, 175, 195, 0.82);
+            animation: floatHint 2.4s ease-in-out infinite;
+        }
+        @keyframes floatHint {
+            0%, 100% { transform: translateY(0); }
+            50%       { transform: translateY(8px); }
+        }
+
+        /* ── 时间线区域 ── */
+        .timeline-section {
+            display: none;
+            position: relative;
+            z-index: 1;
+            padding: 60px 20px 160px;
+            max-width: 860px;
+            margin: 0 auto;
+        }
+
+        /* 竖线 - 渐变色 */
+        .timeline-line {
+            position: absolute;
+            left: 50%;
+            top: 60px;
+            bottom: 130px;
+            width: 2px;
+            background: linear-gradient(180deg,
+                transparent 0%,
+                rgba(255, 61, 106, 0.55) 15%,
+                rgba(255, 61, 106, 0.38) 80%,
+                transparent 100%);
+            transform: translateX(-50%);
+        }
+
+        /* 事件卡片 */
+        .event {
+            display: flex;
+            justify-content: flex-end;
+            padding-right: 50%;
+            position: relative;
+            margin: 52px 0;
+            width: 100%;
+            opacity: 0;
+            transform: translateY(28px);
+            transition: opacity 0.75s ease, transform 0.75s ease;
+            will-change: transform, opacity;
+        }
+        .event:nth-child(even) {
+            justify-content: flex-start;
+            padding-right: 0;
+            padding-left: 50%;
+        }
+        .event.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .event-content {
+            width: 82%;
+            background: rgba(255, 255, 255, 0.045);
+            padding: 22px 20px;
+            border-radius: var(--radius-card);
+            border: 1px solid rgba(255, 61, 106, 0.18);
+            position: relative;
+            box-shadow: 0 8px 28px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.04);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .event-content:hover {
+            border-color: rgba(255, 61, 106, 0.36);
+            box-shadow: 0 12px 36px rgba(0,0,0,0.22), 0 0 18px rgba(255,61,106,0.08);
+        }
+
+        /* 连接圆点 */
+        .event-content::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            width: 12px; height: 12px;
+            background: var(--c-rose);
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(255, 61, 106, 0.8), 0 0 20px rgba(255, 61, 106, 0.4);
+        }
+        .event:nth-child(odd) .event-content {
+            margin-right: 28px;
+            text-align: right;
+        }
+        .event:nth-child(odd) .event-content::before { right: -34px; }
+        .event:nth-child(even) .event-content {
+            margin-left: 28px;
+            text-align: left;
+        }
+        .event:nth-child(even) .event-content::before { left: -34px; }
+
+        .year {
+            color: var(--c-rose-light);
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            letter-spacing: 0.04rem;
+        }
+        .event-content p {
+            margin: 0;
+            line-height: 1.95;
+            color: rgba(255, 240, 248, 0.88);
+            font-size: 0.95rem;
+        }
+
+        /* 结尾 */
+        .timeline-ending {
+            position: relative;
+            z-index: 1;
+            max-width: 540px;
+            margin: 32px auto 0;
+            text-align: center;
+            color: var(--c-text-dim);
+            line-height: 2;
+            font-size: 0.97rem;
+            padding: 20px;
+            border-top: 1px solid rgba(255, 61, 106, 0.18);
+        }
+
+        /* ── info-btn ── */
+        .info-btn {
+            position: fixed;
+            top: max(16px, env(safe-area-inset-top, 0px));
+            right: 20px;
+            z-index: 100;
+            border: 1px solid rgba(255,255,255,0.22);
+            padding: 8px 18px;
+            border-radius: var(--radius-pill);
+            cursor: pointer;
+            color: rgba(255,220,234,0.9);
+            font-family: var(--font-main);
+            font-size: 0.85rem;
+            background: rgba(14, 8, 22, 0.72);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: background 0.22s, border-color 0.22s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .info-btn:hover {
+            background: rgba(255, 61, 106, 0.14);
+            border-color: rgba(255, 120, 155, 0.38);
+        }
+
+        /* ── Modal ── */
+        .modal-overlay {
+            display: none;
+            position: fixed; inset: 0;
+            z-index: 200;
+            background: rgba(5, 2, 10, 0.55);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.is-open { display: flex; }
+
+        .modal {
+            background: rgba(18, 8, 28, 0.97);
+            border: 1px solid rgba(255, 61, 106, 0.35);
+            padding: 32px 28px;
+            border-radius: var(--radius-card);
+            text-align: center;
+            width: min(calc(100vw - 40px), 360px);
+            box-shadow: 0 0 0 1px rgba(255,61,106,0.08), 0 20px 50px rgba(0,0,0,0.5), 0 0 40px rgba(255,61,106,0.12);
+        }
+        .modal h2 {
+            margin: 0 0 14px;
+            color: var(--c-rose-light);
+            font-size: 1.15rem;
+            font-weight: 500;
+            letter-spacing: 0.06rem;
+        }
+        .modal p {
+            line-height: 1.9; color: rgba(255,236,244,0.86);
+            font-size: 0.95rem; margin: 0;
+        }
+
+        .close-btn {
+            margin-top: 22px; padding: 9px 28px;
+            background: linear-gradient(135deg, var(--c-rose), var(--c-rose-dark));
+            border: none; color: white;
+            font-family: var(--font-main); font-size: 0.9rem;
+            border-radius: var(--radius-pill); cursor: pointer;
+            transition: opacity 0.2s, transform 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .close-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+
+        /* ── Nav ── */
+        .nav {
+            position: fixed;
+            left: 50%; bottom: max(20px, env(safe-area-inset-bottom, 0px));
+            transform: translateX(-50%);
+            display: flex; flex-wrap: wrap;
+            justify-content: center; gap: 10px;
+            z-index: 50; width: min(92vw, 600px);
+        }
+        .nav-link {
+            display: inline-flex; align-items: center; justify-content: center;
+            min-width: 140px; padding: 12px 20px;
+            border-radius: var(--radius-pill);
+            text-decoration: none;
+            border: 1px solid var(--c-border);
+            color: rgba(255,220,234,0.88);
+            font-family: var(--font-main); font-size: 0.9rem;
+            background: rgba(14, 8, 22, 0.72);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            transition: opacity 0.28s, transform 0.28s, background 0.28s, border-color 0.28s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .nav-link:hover { background: rgba(255,61,106,0.1); border-color: rgba(255,100,140,0.3); transform: translateY(-1px); }
+        .nav-link.primary { border-color: rgba(255,90,130,0.55); background: rgba(255,61,106,0.16); color: #fff; }
+        .nav-link.primary:hover { background: rgba(255,61,106,0.26); border-color: rgba(255,120,155,0.7); }
+        .nav-link.is-hidden { opacity: 0; pointer-events: none; transform: translateY(8px); }
+        .nav-link.is-visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
+
+        /* ── 移动端适配 ── */
+        @media (max-width: 720px) {
+            .timeline-line { left: 24px; transform: none; }
+
+            .event,
+            .event:nth-child(even) {
+                justify-content: flex-start;
+                padding: 0 0 0 52px;
+            }
+            .event-content { width: 100%; }
+            .event:nth-child(odd) .event-content,
+            .event:nth-child(even) .event-content {
+                margin: 0; text-align: left;
+            }
+            .event:nth-child(odd) .event-content::before,
+            .event:nth-child(even) .event-content::before {
+                left: -33px; right: auto;
+            }
+            .nav-link { width: 100%; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            body { animation: none; }
+            .heart-btn { animation: none; transform: rotate(-45deg); }
+            .hint { animation: none; }
+            .stars-bg::before, .stars-bg::after { animation: none; opacity: 0.65; }
+            .event { transition: opacity 0.3s ease; }
+        }
+    </style>
+</head>
+<body>
+    <div class="stars-bg" aria-hidden="true"></div>
+
+    <button class="info-btn" id="openModal" aria-haspopup="dialog" aria-controls="modal">寓意</button>
+    <div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true"
+         aria-labelledby="modalTitle" aria-describedby="modalDesc" tabindex="-1">
+        <div class="modal" id="modal">
+            <h2 id="modalTitle"></h2>
+            <p id="modalDesc"></p>
+            <button class="close-btn" id="closeModal">关闭</button>
+        </div>
+    </div>
+
+    <section class="hero">
+        <button class="heart-btn" id="trigger" aria-label="开启时光轴"></button>
+        <div class="hero-title" id="heroTitle"></div>
+        <div class="hint" id="hintText"></div>
+    </section>
+
+    <section class="timeline-section" id="timeline">
+        <div class="timeline-line" aria-hidden="true"></div>
+        <div class="timeline-ending" id="timelineEnding"></div>
+    </section>
+
+    <nav class="nav" aria-label="页面导航">
+        <a class="nav-link" href="./01-password.html">回到上一页</a>
+        <a class="nav-link primary is-hidden" id="nextLink" href="./03-letter.html" tabindex="-1"></a>
+    </nav>
+
+    <script>
+        const CONFIG = {
+            pageTitle:      '给你的秘密宇宙 · 时光轴',
+            modalTitle:     '我们的时间，一直算数',
+            modalDesc:      '时间让很多事情慢慢变得清楚，也让我更明白，那个想一直并肩走下去的人，是你。',
+            heroTitle:      '和你有关的时间，都值得珍藏',
+            hintText:       '点一下，从那些被你照亮的时刻开始',
+            endingText:     '回头看这些时间，我更确定的不是某一个日期，而是想陪你很久很久这件事。',
+            nextLabel:      '再往后翻一页 →',
+            afterStartHint: '继续往下翻，看看我们一路走来的心动。',
+            events: [
+                { year: '[相识日期] 相识', desc: '那时还不知道，这个名字以后会一次又一次出现在我的日常里，也会越来越自然地住进我心里。' },
+                { year: '慢慢熟悉',        desc: '从偶尔说起日常，到后来什么都想和你分享，我才发现，原来在意一个人会先从习惯开始。' },
+                { year: '确认心意',        desc: '不是某个特别轰动的瞬间，而是在很多普通日子里，我都先想到你、先惦记你、先想把话说给你听。' },
+                { year: '[订婚日期] 订婚', desc: '把承诺说出口的时候，我心里很安定。像是那些慢慢长出来的喜欢，终于有了更笃定的回应。' },
+                { year: '[结婚日期] 结婚', desc: '这一天当然重要，但我更期待的，是以后每一个清晨和傍晚，都还能这样安安稳稳地和你站在一起。' },
+                { year: '往后的每一年',   desc: '以后我还是会叫你宝、叫你宝贝，也会继续在那些不算盛大的日常里，把偏爱留给你。' }
+            ]
+        };
+
+        document.title = CONFIG.pageTitle;
+        document.getElementById('modalTitle').innerText    = CONFIG.modalTitle;
+        document.getElementById('modalDesc').innerText     = CONFIG.modalDesc;
+        document.getElementById('heroTitle').innerText     = CONFIG.heroTitle;
+        document.getElementById('hintText').innerText      = CONFIG.hintText;
+        document.getElementById('timelineEnding').innerText = CONFIG.endingText;
+        document.getElementById('nextLink').innerText      = CONFIG.nextLabel;
+
+        // 渲染事件节点
+        const timelineContainer = document.getElementById('timeline');
+        const endingNode        = document.getElementById('timelineEnding');
+        const nextLink          = document.getElementById('nextLink');
+
+        CONFIG.events.forEach(item => {
+            const eventNode   = document.createElement('div');
+            eventNode.className = 'event';
+
+            const contentNode = document.createElement('div');
+            contentNode.className = 'event-content';
+
+            const yearNode  = document.createElement('div');
+            yearNode.className   = 'year';
+            yearNode.innerText   = item.year;
+
+            const descNode  = document.createElement('p');
+            descNode.innerText   = item.desc;
+
+            contentNode.appendChild(yearNode);
+            contentNode.appendChild(descNode);
+            eventNode.appendChild(contentNode);
+            timelineContainer.insertBefore(eventNode, endingNode);
+        });
+
+        const eventElements = Array.from(document.querySelectorAll('.event'));
+        const lastEvent     = eventElements[eventElements.length - 1] ?? null;
+
+        // 交互
+        const trigger      = document.getElementById('trigger');
+        const modalOverlay = document.getElementById('modalOverlay');
+        const openModalBtn = document.getElementById('openModal');
+        const closeModalBtn = document.getElementById('closeModal');
+        let started = false;
+        let lastFocused = null;
+
+        function openModal() {
+            lastFocused = document.activeElement;
+            modalOverlay.classList.add('is-open');
+            closeModalBtn.focus();
+        }
+        function closeModal() {
+            modalOverlay.classList.remove('is-open');
+            (lastFocused instanceof HTMLElement ? lastFocused : openModalBtn).focus();
+        }
+
+        openModalBtn.addEventListener('click', openModal);
+        closeModalBtn.addEventListener('click', closeModal);
+        modalOverlay.addEventListener('click', e => { if (e.target === modalOverlay) closeModal(); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape' && modalOverlay.classList.contains('is-open')) closeModal(); });
+
+        function startTimeline() {
+            if (started) return;
+            started = true;
+            timelineContainer.style.display = 'block';
+            document.getElementById('hintText').innerText = CONFIG.afterStartHint;
+
+            window.scrollTo({ top: Math.max(window.innerHeight * 0.72, 500), behavior: 'smooth' });
+
+            const observer = new IntersectionObserver((entries, obs) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        if (entry.target === lastEvent) {
+                            nextLink.classList.remove('is-hidden');
+                            nextLink.classList.add('is-visible');
+                        }
+                        obs.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.22 });
+
+            eventElements.forEach(el => observer.observe(el));
+        }
+
+        trigger.addEventListener('click', startTimeline);
+        trigger.addEventListener('keydown', e => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); startTimeline(); }
+        });
+    </script>
+</body>
+</html>

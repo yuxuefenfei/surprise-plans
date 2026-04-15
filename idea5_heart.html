@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>同频共振 - [姓名]</title>
+    <style>
+        :root {
+            --heart-size: clamp(92px, 24vw, 120px);
+            --ring-size: calc(var(--heart-size) * 1.08);
+            --stage-width: min(100%, 420px);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            min-height: 100svh;
+            background: radial-gradient(circle at center, #1a0000 0%, #000000 100%);
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+        }
+
+        .container {
+            position: relative;
+            width: 100vw;
+            min-height: 100vh;
+            min-height: 100svh;
+            display: grid;
+            place-items: center;
+            padding: max(24px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom));
+            box-sizing: border-box;
+        }
+
+        .stage {
+            position: relative;
+            width: var(--stage-width);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: clamp(18px, 4vh, 32px);
+            z-index: 10;
+            flex: 0 0 auto;
+        }
+
+        .heart-wrapper {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: min(72vw, 300px);
+            height: min(72vw, 300px);
+            min-width: 220px;
+            min-height: 220px;
+            margin-inline: auto;
+            flex: 0 0 auto;
+        }
+
+        .heart {
+            position: relative;
+            width: var(--heart-size);
+            height: var(--heart-size);
+            background: #ff1e3c;
+            transform: rotate(-45deg);
+            animation: heartbeat 1.2s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+            box-shadow: 0 0 40px #ff1e3c, 0 0 80px #ea0022;
+            cursor: pointer;
+            z-index: 10;
+            transition: background 0.3s ease;
+        }
+        .heart:hover { background: #ff4d63; }
+
+        .heart::before, .heart::after { content: ''; position: absolute; width: var(--heart-size); height: var(--heart-size); background: inherit; border-radius: 50%; box-shadow: 0 0 20px rgba(255, 30, 60, 0.5); }
+        .heart::before { top: calc(var(--heart-size) * -0.5); left: 0; }
+        .heart::after { top: 0; left: calc(var(--heart-size) * 0.5); }
+
+        @keyframes heartbeat {
+            0%, 30%, 60%, 100% { transform: rotate(-45deg) scale(1); box-shadow: 0 0 40px #ff1e3c, 0 0 100px #ea0022; }
+            15% { transform: rotate(-45deg) scale(1.3); box-shadow: 0 0 60px #ff1e3c, 0 0 150px #ea0022; }
+            45% { transform: rotate(-45deg) scale(1.15); box-shadow: 0 0 50px #ff1e3c, 0 0 120px #ea0022; }
+        }
+
+        .glow-ring { position: absolute; width: var(--ring-size); height: var(--ring-size); border-radius: 50%; border: 2px solid rgba(255, 30, 60, 0.4); animation: pulse-ring 2.4s infinite cubic-bezier(0.215, 0.61, 0.355, 1); z-index: 1; pointer-events: none; }
+        .glow-ring:nth-child(2) { animation-delay: 0.8s; }
+        .glow-ring:nth-child(3) { animation-delay: 1.6s; }
+
+        @keyframes pulse-ring { 0% { transform: scale(1); opacity: 1; border-width: 4px; } 100% { transform: scale(6); opacity: 0; border-width: 0px; } }
+        
+        .particles { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+            width: 100%;
+            min-height: 112px;
+            flex: 0 0 auto;
+        }
+
+        .text {
+            margin: 0;
+            font-size: clamp(1rem, 3.4vw, 1.35rem);
+            font-weight: 300;
+            letter-spacing: 0.24em;
+            opacity: 0.84;
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        .tap-btn {
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.08);
+            color: white;
+            padding: 12px 22px;
+            border-radius: 999px;
+            font-size: 0.95rem;
+            letter-spacing: 0.12em;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            transition: background 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+        }
+
+        .tap-btn:hover {
+            background: rgba(255,255,255,0.14);
+            border-color: rgba(255,255,255,0.35);
+            transform: translateY(-1px);
+        }
+
+        /* Modal */
+        .info-btn { position: fixed; top: 30px; right: 30px; z-index: 20; border: 1px solid rgba(255,255,255,0.3); padding: 8px 16px; border-radius: 20px; cursor: pointer; color: white; background: transparent; backdrop-filter: blur(5px); }
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(20,0,5,0.95); border: 1px solid #ff1e3c; padding: 30px; border-radius: 15px; z-index: 30; text-align: center; max-width: 300px; box-shadow: 0 0 30px rgba(255,30,60,0.3); }
+        .close-btn { margin-top: 20px; padding: 8px 24px; background: #ff1e3c; border: none; color: white; border-radius: 20px; cursor: pointer; }
+
+        @media (max-width: 640px) {
+            body {
+                overflow-x: hidden;
+                overflow-y: auto;
+                align-items: flex-start;
+            }
+
+            .container {
+                min-height: auto;
+                place-items: start center;
+                align-items: start;
+                padding: max(84px, calc(env(safe-area-inset-top) + 56px)) 16px max(28px, calc(env(safe-area-inset-bottom) + 16px));
+            }
+
+            .stage {
+                width: min(100%, 360px);
+                gap: 18px;
+            }
+
+            .heart-wrapper {
+                width: min(78vw, 280px);
+                height: min(78vw, 280px);
+                min-width: 200px;
+                min-height: 200px;
+            }
+
+            .info-btn {
+                top: 16px;
+                right: 16px;
+            }
+
+            .tap-btn {
+                width: min(100%, 220px);
+            }
+
+            .controls {
+                min-height: 118px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="info-btn" id="openModal">📖 寓意</div>
+    <div class="modal" id="modal">
+        <h2 style="color:#ff4d63; margin-top:0;">同频共振</h2>
+        <p>哪怕世界再嘈杂，只要想起你，我的心跳就会同频共振。</p>
+        <button class="close-btn" id="closeModal">关闭</button>
+    </div>
+
+    <div class="container">
+        <div class="stage">
+            <div class="heart-wrapper">
+                <div class="glow-ring"></div>
+                <div class="glow-ring"></div>
+                <div class="glow-ring"></div>
+                <div class="heart" id="main-heart"></div>
+            </div>
+            <div class="controls">
+                <p class="text">Tap the heart</p>
+                <button class="tap-btn" id="pulseButton" type="button">让心跳再靠近一点</button>
+            </div>
+        </div>
+        <canvas class="particles" id="particlesCanvas"></canvas>
+    </div>
+
+    <script>
+        document.getElementById('openModal').addEventListener('click', () => document.getElementById('modal').style.display='block');
+        document.getElementById('closeModal').addEventListener('click', () => document.getElementById('modal').style.display='none');
+
+        const canvas = document.getElementById('particlesCanvas');
+        const ctx = canvas.getContext('2d');
+        const heartElement = document.getElementById('main-heart');
+        const pulseButton = document.getElementById('pulseButton');
+
+        function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        const particlesArray = [];
+        const colors = ['#ff1e3c', '#ff4d63', '#ea0022', '#ff8093', '#fff'];
+
+        class Particle {
+            constructor(x, y, isExplosion = false) {
+                const rect = heartElement.getBoundingClientRect();
+                this.x = x || (rect.left + rect.width / 2 + (Math.random() * 40 - 20));
+                this.y = y || (rect.top + rect.height / 2 + (Math.random() * 40 - 20));
+                
+                const angle = Math.random() * Math.PI * 2;
+                const speed = isExplosion ? (Math.random() * 10 + 5) : (Math.random() * 3 + 1);
+                
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.size = Math.random() * 4 + 1;
+                this.life = 1;
+                this.decay = isExplosion ? (Math.random() * 0.02 + 0.01) : (Math.random() * 0.02 + 0.005);
+                this.color = colors[Math.floor(Math.random() * colors.length)];
+            }
+            update() {
+                this.x += this.vx; this.y += this.vy; this.life -= this.decay;
+                this.vy += 0.05; // gravity
+            }
+            draw() {
+                ctx.globalAlpha = Math.max(0, this.life);
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function handleParticles() {
+            for (let i = 0; i < particlesArray.length; i++) {
+                particlesArray[i].update();
+                particlesArray[i].draw();
+                if (particlesArray[i].life <= 0) {
+                    particlesArray.splice(i, 1);
+                    i--;
+                }
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Cap max particles for performance
+            if (Math.random() > 0.8 && particlesArray.length < 150) {
+                particlesArray.push(new Particle());
+            }
+            ctx.globalAlpha = 1;
+            handleParticles();
+            requestAnimationFrame(animate);
+        }
+
+        function triggerHeartBurst() {
+            const rect = heartElement.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            
+            // Limit explosion particle count to save performance
+            const spawnCount = Math.min(60, 200 - particlesArray.length);
+            for(let i=0; i<spawnCount; i++) {
+                particlesArray.push(new Particle(centerX, centerY, true));
+            }
+            
+            heartElement.style.transform = 'rotate(-45deg) scale(0.9)';
+            setTimeout(() => { heartElement.style.transform = ''; }, 100);
+        }
+
+        heartElement.addEventListener('click', triggerHeartBurst);
+        pulseButton.addEventListener('click', triggerHeartBurst);
+
+        animate();
+    </script>
+</body>
+</html>

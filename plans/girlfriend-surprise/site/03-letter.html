@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0d0610">
+    <title>给你的秘密宇宙 · 专属信件</title>
+    <style>
+        :root {
+            --c-bg-deep:       #0d0610;
+            --c-rose:          #ff3d6a;
+            --c-rose-dark:     #ea0037;
+            --c-rose-light:    #ff7a9e;
+            --c-envelope-body: #c46070;
+            --c-envelope-dark: #a64d5c;
+            --c-envelope-flap: #d87080;
+            --c-text:          #fff0f5;
+            --c-text-dim:      rgba(255, 220, 234, 0.78);
+            --c-border:        rgba(255, 255, 255, 0.12);
+            --radius-card:     22px;
+            --radius-pill:     999px;
+            --font-main:       'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            --font-letter:     'Segoe UI', 'PingFang SC', 'Microsoft YaHei', Georgia, serif;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background:
+                radial-gradient(ellipse at 50% 30%, rgba(220, 100, 130, 0.15) 0%, transparent 52%),
+                radial-gradient(ellipse at 15% 80%, rgba(160, 40, 80, 0.1) 0%, transparent 40%),
+                linear-gradient(160deg, var(--c-bg-deep) 0%, #1c0e1a 55%, #09040c 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            min-height: 100svh;
+            overflow: hidden;
+            font-family: var(--font-main);
+            color: var(--c-text);
+            padding: 20px 20px calc(120px + env(safe-area-inset-bottom, 0px));
+            animation: pageIn 0.65s ease both;
+        }
+
+        @keyframes pageIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── 星点背景 ── */
+        body::before {
+            content: '';
+            position: fixed; inset: 0;
+            pointer-events: none;
+            background-image:
+                radial-gradient(circle, rgba(255,255,255,0.75) 0.5px, transparent 1px),
+                radial-gradient(circle, rgba(255,200,215,0.55) 0.5px, transparent 1px),
+                radial-gradient(circle, rgba(255,255,255,0.6)  0.5px, transparent 1px),
+                radial-gradient(circle, rgba(255,180,200,0.5)  0.5px, transparent 1px);
+            background-size: 290px 320px, 380px 400px, 210px 240px, 340px 360px;
+            background-position: 45px 70px, 160px 200px, 290px 60px, 100px 330px;
+            animation: twinkle 7s ease-in-out infinite alternate;
+            z-index: 0;
+            opacity: 0.7;
+        }
+        @keyframes twinkle {
+            from { opacity: 0.35; }
+            to   { opacity: 0.8; }
+        }
+
+        /* ── 舞台 ── */
+        .stage {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 52px;
+        }
+
+        /* ── 信封 ── */
+        .envelope-wrap {
+            position: relative;
+            width: 310px;
+            height: 210px;
+            perspective: 1200px;
+            cursor: pointer;
+            transition: transform 0.4s ease;
+            transform-style: preserve-3d;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .envelope-wrap:hover:not(.open):not(.closing) {
+            transform: translateY(-8px) rotate(-0.5deg);
+        }
+
+        /* 信封背面（底层） */
+        .envelope-back {
+            position: absolute; width: 100%; height: 100%;
+            background: linear-gradient(160deg, var(--c-envelope-body) 0%, var(--c-envelope-dark) 100%);
+            border-radius: 4px 4px 0 0;
+            box-shadow: 0 14px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08);
+            z-index: 1;
+        }
+
+        /* 信纸 */
+        .letter-slot {
+            position: absolute; inset: 0;
+            overflow: visible;
+            clip-path: inset(0 0 0 0);
+            z-index: 2;
+            transition: clip-path 0s 0.95s; /* matches the closing letter descent time */
+        }
+        .letter {
+            position: absolute;
+            top: 10px; left: 10px; right: 10px;
+            height: 188px;
+            background: linear-gradient(180deg, #fefaf6 0%, #fdf6f0 100%);
+            border-radius: 4px;
+            box-shadow: 0 2px 14px rgba(0,0,0,0.14);
+            transition: top 0.95s cubic-bezier(0.22, 1, 0.36, 1),
+                        height 0.75s ease,
+                        box-shadow 0.75s ease;
+            z-index: 2;
+            padding: 20px;
+            text-align: center;
+            overflow: hidden;
+            will-change: top, height;
+        }
+        .letter h3 {
+            color: var(--c-envelope-dark);
+            margin-bottom: 10px;
+            font-family: var(--font-letter);
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        .letter p {
+            color: #5a3a42;
+            line-height: 1.75;
+            font-size: 0.9rem;
+            font-family: var(--font-letter);
+        }
+        .letter h3, .letter p {
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.42s ease, transform 0.42s ease;
+        }
+
+        /* 信封前面遮罩（三角侧边） */
+        .envelope-front {
+            position: absolute; top: 0; left: 0;
+            width: 0; height: 0;
+            border-top: 105px solid transparent;
+            border-right: 155px solid var(--c-envelope-body);
+            border-bottom: 105px solid var(--c-envelope-dark);
+            border-left: 155px solid var(--c-envelope-body);
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        /* 信封翻盖 */
+        .flap {
+            position: absolute; top: 0; left: 0;
+            width: 0; height: 0;
+            border-left: 155px solid transparent;
+            border-right: 155px solid transparent;
+            border-top: 105px solid var(--c-envelope-flap);
+            transform-origin: 50% 0;
+            transition: transform 0.82s cubic-bezier(0.4, 0, 0.2, 1), z-index 0s 0.4s;
+            z-index: 4;
+            pointer-events: none;
+            will-change: transform;
+        }
+
+        /* 火漆印 */
+        .seal {
+            position: absolute; top: 84px; left: 135px;
+            width: 42px; height: 42px;
+            background: radial-gradient(circle, #cc2040 40%, #8a0020 100%);
+            border-radius: 50%;
+            z-index: 5;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,150,170,0.2);
+            display: flex; justify-content: center; align-items: center;
+            font-size: 20px; line-height: 1;
+            transition: opacity 0.22s, transform 0.22s;
+            pointer-events: none;
+            user-select: none;
+        }
+        .seal::after { content: '❤'; color: rgba(255, 210, 220, 0.9); }
+
+        /* 提示文字 */
+        .hint {
+            position: absolute; bottom: -48px; left: 0; width: 100%;
+            text-align: center;
+            color: var(--c-text-dim);
+            font-size: 0.9rem; letter-spacing: 0.06rem;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        /* ── 开启状态 ── */
+        .envelope-wrap.open .flap {
+            transform: rotateX(180deg);
+            transition: transform 0.82s cubic-bezier(0.4, 0, 0.2, 1) 0.14s, z-index 0s 0.4s;
+            z-index: 1;
+        }
+        .envelope-wrap.open .letter-slot { 
+            clip-path: inset(-420px 0 0 0); 
+            transition: clip-path 0s 0.8s; /* unclip right before letter pops up */
+        }
+        .envelope-wrap.open .letter {
+            top: -260px; height: 400px;
+            box-shadow: 0 18px 40px rgba(0,0,0,0.4);
+            z-index: 5;
+            transition-delay: 1.0s;
+            overflow-y: auto;
+            pointer-events: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .letter::-webkit-scrollbar { width: 4px; }
+        .letter::-webkit-scrollbar-thumb { background: rgba(166, 77, 92, 0.3); border-radius: 4px; }
+        .envelope-wrap.open .letter h3,
+        .envelope-wrap.open .letter p { opacity: 1; transform: translateY(0); }
+        .envelope-wrap.open .letter h3 { transition-delay: 1.5s; }
+        .envelope-wrap.open .letter p:nth-of-type(1) { transition-delay: 1.65s; }
+        .envelope-wrap.open .letter p:nth-of-type(2) { transition-delay: 1.8s; }
+        .envelope-wrap.open .letter p:nth-of-type(3) { transition-delay: 1.95s; }
+        .envelope-wrap.open .seal { opacity: 0; transform: scale(0.5); }
+
+        /* ── 关闭中状态 ── */
+        .envelope-wrap.closing .flap      { transform: rotateX(180deg); z-index: 1; }
+        .envelope-wrap.closing .letter-slot { clip-path: inset(-420px 0 0 0); }
+        .envelope-wrap.closing .letter     { top: 10px; height: 188px; box-shadow: 0 2px 14px rgba(0,0,0,0.14); z-index: 2; }
+        .envelope-wrap.closing .letter h3,
+        .envelope-wrap.closing .letter p   { opacity: 0; transform: translateY(10px); transition-delay: 0s !important; }
+        .envelope-wrap.closing .seal       { opacity: 0; transform: scale(0.5); }
+
+        /* ── info-btn ── */
+        .info-btn {
+            position: fixed;
+            top: max(16px, env(safe-area-inset-top, 0px)); right: 20px;
+            z-index: 100;
+            border: 1px solid rgba(255,255,255,0.22);
+            padding: 8px 18px; border-radius: var(--radius-pill);
+            cursor: pointer; color: rgba(255,220,234,0.9);
+            font-family: var(--font-main); font-size: 0.85rem;
+            background: rgba(14, 8, 22, 0.72);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            transition: background 0.22s, border-color 0.22s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .info-btn:hover { background: rgba(255,61,106,0.14); border-color: rgba(255,120,155,0.38); }
+
+        /* ── Modal ── */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0; z-index: 200;
+            background: rgba(5, 2, 10, 0.55);
+            backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+            align-items: center; justify-content: center;
+        }
+        .modal-overlay.is-open { display: flex; }
+        .modal {
+            background: rgba(18, 8, 28, 0.97);
+            border: 1px solid rgba(255, 61, 106, 0.35);
+            padding: 32px 28px; border-radius: var(--radius-card);
+            text-align: center; width: min(calc(100vw - 40px), 360px);
+            box-shadow: 0 0 0 1px rgba(255,61,106,0.08), 0 20px 50px rgba(0,0,0,0.5), 0 0 40px rgba(255,61,106,0.12);
+        }
+        .modal h2 { margin: 0 0 14px; color: var(--c-rose-light); font-size: 1.15rem; font-weight: 500; letter-spacing: 0.06rem; }
+        .modal p  { line-height: 1.9; color: rgba(255,236,244,0.86); font-size: 0.95rem; margin: 0; }
+        .close-btn {
+            margin-top: 22px; padding: 9px 28px;
+            background: linear-gradient(135deg, var(--c-rose), var(--c-rose-dark));
+            border: none; color: white; font-family: var(--font-main); font-size: 0.9rem;
+            border-radius: var(--radius-pill); cursor: pointer;
+            transition: opacity 0.2s, transform 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .close-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+
+        /* ── Nav ── */
+        .nav {
+            position: fixed;
+            left: 50%; bottom: max(20px, env(safe-area-inset-bottom, 0px));
+            transform: translateX(-50%);
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
+            z-index: 50; width: min(92vw, 600px);
+        }
+        .nav-link {
+            display: inline-flex; align-items: center; justify-content: center;
+            min-width: 140px; padding: 12px 20px; border-radius: var(--radius-pill);
+            text-decoration: none; border: 1px solid var(--c-border);
+            color: rgba(255,220,234,0.88); font-family: var(--font-main); font-size: 0.9rem;
+            background: rgba(14, 8, 22, 0.72);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            transition: opacity 0.28s, transform 0.28s, background 0.28s, border-color 0.28s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .nav-link:hover { background: rgba(255,61,106,0.1); border-color: rgba(255,100,140,0.3); transform: translateY(-1px); }
+        .nav-link.primary { border-color: rgba(255,90,130,0.55); background: rgba(255,61,106,0.16); color: #fff; }
+        .nav-link.primary:hover { background: rgba(255,61,106,0.26); border-color: rgba(255,120,155,0.7); }
+        .nav-link.is-hidden { opacity: 0; pointer-events: none; transform: translateY(8px); }
+        .nav-link.is-visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
+
+        @media (max-width: 520px) {
+            .envelope-wrap { width: 280px; height: 190px; }
+            .envelope-front {
+                border-top-width: 95px; border-right-width: 140px;
+                border-bottom-width: 95px; border-left-width: 140px;
+            }
+            .flap { border-left-width: 140px; border-right-width: 140px; border-top-width: 95px; }
+            .seal { left: 120px; top: 74px; }
+            .envelope-wrap.open .letter { top: -240px; height: 370px; }
+            .nav-link { width: 100%; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            body { animation: none; }
+            body::before { animation: none; opacity: 0.5; }
+            .flap { transition: none; }
+            .letter { transition: none; }
+        }
+    </style>
+</head>
+<body>
+    <button class="info-btn" id="openModal" aria-haspopup="dialog">寓意</button>
+
+    <div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true"
+         aria-labelledby="modalTitle" aria-describedby="modalDesc" tabindex="-1">
+        <div class="modal">
+            <h2 id="modalTitle"></h2>
+            <p id="modalDesc"></p>
+            <button class="close-btn" id="closeModal">关闭</button>
+        </div>
+    </div>
+
+    <div class="stage">
+        <div class="envelope-wrap" id="mail" role="button" tabindex="0" aria-label="点击打开信封">
+            <div class="envelope-back"></div>
+            <div class="letter-slot">
+                <div class="letter" id="letterInner"></div>
+            </div>
+            <div class="envelope-front"></div>
+            <div class="flap"></div>
+            <div class="seal" aria-hidden="true"></div>
+            <div class="hint" id="hintText"></div>
+        </div>
+    </div>
+
+    <nav class="nav" aria-label="页面导航">
+        <a class="nav-link" href="./02-timeline.html">回到上一页</a>
+        <a class="nav-link primary is-hidden" id="nextLink" href="./04-heart.html" tabindex="-1"></a>
+    </nav>
+
+    <script>
+        const CONFIG = {
+            modalTitle: '有些话，还是想郑重告诉你',
+            modalDesc:  '有些喜欢不是一下子就说出口的，而是在很多来来回回的日常里，慢慢变成了离不开的惦记。',
+            letterTitle: '致我的宝贝[姓名]',
+            hintText:    '点击信封，拆开我想认真说给你的话',
+            readingHintText: '如果你愿意，继续往后翻，还有我没说尽的心意。',
+            nextLabel:   '再听听我藏着的话 →',
+            letterParagraphs: [
+                '宝贝，准备这个页面的时候，<br>我想了很久该怎么开头。因为越是和你有关的话，我越想说得认真一点、温柔一点。',
+                '你出现以后，<br>我的生活里就多了很多很小却很确定的期待。比如想和你说今天发生了什么，想知道你过得好不好，想把那些细碎情绪都先交给你。',
+                '我喜欢叫你宝，喜欢叫你宝贝，<br>喜欢你笑起来的样子，也喜欢那些不说话却依然觉得安心的时刻。后来我才明白，这大概就是偏爱慢慢长出来的样子。',
+                '<span style="display:block;text-align:right;margin-top:16px;font-size:0.88rem;color:#9a5060;">—— 会一直叫你宝的人</span>'
+            ]
+        };
+
+        document.getElementById('modalTitle').innerText = CONFIG.modalTitle;
+        document.getElementById('modalDesc').innerText  = CONFIG.modalDesc;
+        document.getElementById('hintText').innerText   = CONFIG.hintText;
+        document.getElementById('nextLink').innerText   = CONFIG.nextLabel;
+
+        // 渲染信件内容
+        const letterInner = document.getElementById('letterInner');
+        let html = `<h3>${CONFIG.letterTitle}</h3>`;
+        CONFIG.letterParagraphs.forEach((p, i) => {
+            html += `<p style="transition-delay:${1.55 + i * 0.18}s">${p}</p>`;
+        });
+        letterInner.innerHTML = html;
+
+        // Modal
+        const modalOverlay  = document.getElementById('modalOverlay');
+        const openModalBtn  = document.getElementById('openModal');
+        const closeModalBtn = document.getElementById('closeModal');
+        let lastFocused = null;
+
+        function openModal() { lastFocused = document.activeElement; modalOverlay.classList.add('is-open'); closeModalBtn.focus(); }
+        function closeModal() { modalOverlay.classList.remove('is-open'); (lastFocused instanceof HTMLElement ? lastFocused : openModalBtn).focus(); }
+
+        openModalBtn.addEventListener('click', openModal);
+        closeModalBtn.addEventListener('click', closeModal);
+        modalOverlay.addEventListener('click', e => { if (e.target === modalOverlay) closeModal(); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape' && modalOverlay.classList.contains('is-open')) closeModal(); });
+
+        // 信封交互
+        const mail     = document.getElementById('mail');
+        const hint     = document.getElementById('hintText');
+        const nextLink = document.getElementById('nextLink');
+        let phaseTimer = null;
+        let mailState  = 'closed';
+
+        function handleMailClick() {
+            clearTimeout(phaseTimer);
+
+            if (mailState === 'open') {
+                mailState = 'closing';
+                mail.classList.add('closing');
+                hint.style.opacity = '1';
+                hint.innerText = CONFIG.hintText;
+                nextLink.classList.remove('is-visible');
+                nextLink.classList.add('is-hidden');
+                phaseTimer = setTimeout(() => {
+                    mail.classList.remove('closing', 'open');
+                    mailState = 'closed';
+                }, 1000);
+                return;
+            }
+
+            if (mailState !== 'closed') return;
+
+            mail.classList.remove('closing');
+            mail.classList.add('open');
+            mailState = 'open';
+            hint.style.opacity = '1';
+            hint.innerText = CONFIG.readingHintText;
+            nextLink.classList.remove('is-hidden');
+            nextLink.classList.add('is-visible');
+            nextLink.tabIndex = 0;
+        }
+
+        mail.addEventListener('click', handleMailClick);
+        mail.addEventListener('keydown', e => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleMailClick(); }
+        });
+        
+        document.getElementById('letterInner').addEventListener('click', e => {
+            if (mailState === 'open') e.stopPropagation();
+        });
+        document.getElementById('letterInner').addEventListener('touchstart', e => {
+            if (mailState === 'open') e.stopPropagation();
+        }, { passive: true });
+    </script>
+</body>
+</html>

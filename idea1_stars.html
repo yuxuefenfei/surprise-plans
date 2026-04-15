@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>星光汇聚 - [姓名]</title>
+    <style>
+        body { margin: 0; background: radial-gradient(circle at center, #1b0a1a 0%, #05020a 100%); overflow: hidden; font-family: 'Segoe UI', Tahoma, sans-serif; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        #canvas { position: absolute; top: 0; left: 0; z-index: 1; }
+        
+        .heart {
+            position: relative; width: 80px; height: 80px; background: #ff1e3c;
+            transform: rotate(-45deg); cursor: pointer; z-index: 10;
+            animation: heartbeat 1.5s infinite; box-shadow: 0 0 30px #ff1e3c;
+        }
+        .heart::before, .heart::after {
+            content: ''; position: absolute; width: 80px; height: 80px;
+            background: inherit; border-radius: 50%;
+        }
+        .heart::before { top: -40px; left: 0; }
+        .heart::after { top: 0; left: 40px; }
+        
+        @keyframes heartbeat {
+            0%, 30%, 60%, 100% { transform: rotate(-45deg) scale(1); }
+            15% { transform: rotate(-45deg) scale(1.2); }
+            45% { transform: rotate(-45deg) scale(1.1); }
+        }
+
+        .hint { position: absolute; bottom: 80px; z-index: 10; font-size: 1.2rem; letter-spacing: 2px; animation: pulse 2s infinite; pointer-events: none; }
+        @keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+        /* Modal for explanation */
+        .info-btn { position: absolute; top: 30px; right: 30px; z-index: 20; border: 1px solid rgba(255,255,255,0.3); padding: 8px 16px; border-radius: 20px; cursor: pointer; backdrop-filter: blur(5px); }
+        .info-btn:hover { background: rgba(255,255,255,0.1); }
+        
+        .modal { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(20,20,20,0.9); border: 1px solid #ff1e3c; padding: 30px; border-radius: 15px; z-index: 30; text-align: center; max-width: 300px; box-shadow: 0 0 40px rgba(255,30,60,0.4); }
+        .modal h2 { margin-top: 0; color: #ff4d63; }
+        .modal p { line-height: 1.6; font-size: 1.1rem; }
+        .close-btn { margin-top: 20px; padding: 8px 24px; background: #ff1e3c; border: none; color: white; border-radius: 20px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="heart" id="heart"></div>
+    <div class="hint" id="hint">点击爱心</div>
+    
+    <div class="info-btn" id="openModal">📖 寓意</div>
+    <div class="modal" id="modal">
+        <h2 id="modalTitle"></h2>
+        <p id="modalDesc"></p>
+        <button class="close-btn" id="closeModal">关闭</button>
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const CONFIG = {
+            targetName: '[姓名]',
+            modalTitle: '星光汇聚',
+            modalDesc: '于浩瀚星河中溯流而上，万千微光最终只奔向一个坐标。我的眼里，自此只汇聚成了一个你——[姓名]。'
+        };
+
+        document.getElementById('modalTitle').innerText = CONFIG.modalTitle;
+        document.getElementById('modalDesc').innerText = CONFIG.modalDesc;
+
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        const particles = [];
+        const targets = [];
+        let state = 'wandering'; // wandering, forming
+
+        // Extract text pixels for "[姓名]"
+        const tCanvas = document.createElement('canvas');
+        const tCtx = tCanvas.getContext('2d');
+        tCanvas.width = 600; tCanvas.height = 300;
+        tCtx.fillStyle = 'white';
+        tCtx.font = 'bold 150px "Segoe UI", sans-serif';
+        tCtx.textAlign = 'center';
+        tCtx.textBaseline = 'middle';
+        tCtx.fillText(CONFIG.targetName, 300, 150);
+
+        const imgData = tCtx.getImageData(0,0, 600, 300).data;
+        const offsetX = width/2 - 300;
+        const offsetY = height/2 - 150;
+
+        for(let y=0; y<300; y+=4) {
+            for(let x=0; x<600; x+=4) {
+                const alpha = imgData[(y*600 + x)*4 + 3];
+                if(alpha > 128) {
+                    targets.push({ x: x + offsetX, y: y + offsetY });
+                }
+            }
+        }
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 0.3; // Slower, elegant drift
+                this.vy = (Math.random() - 0.5) * 0.3;
+                // Soft romantic palette
+                const palettes = ['#ffffff', '#fff0f5', '#ffe4e1', '#ffb6c1', '#fbd1d9'];
+                this.color = palettes[Math.floor(Math.random() * palettes.length)];
+                this.size = Math.random() * 1.2 + 0.4; // Smaller points
+                this.target = null;
+                // Twinkling
+                this.alpha = Math.random();
+                this.alphaSpeed = Math.random() * 0.01 + 0.005;
+            }
+            update() {
+                if(state === 'wandering') {
+                    this.x += this.vx; 
+                    this.y += this.vy;
+                    // Wrap around instead of harsh box bouncing
+                    if(this.x < -10) this.x = width + 10;
+                    if(this.x > width + 10) this.x = -10;
+                    if(this.y < -10) this.y = height + 10;
+                    if(this.y > height + 10) this.y = -10;
+
+                    this.alpha += this.alphaSpeed;
+                    if(this.alpha > 1 || this.alpha < 0.1) this.alphaSpeed *= -1;
+                } else if(state === 'forming' && this.target) {
+                    const dx = this.target.x - this.x;
+                    const dy = this.target.y - this.y;
+                    
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    if (dist > 1) {
+                        this.x += dx * 0.08 + (dx/dist)*2;
+                        this.y += dy * 0.08 + (dy/dist)*2;
+                    } else {
+                        this.x = this.target.x;
+                        this.y = this.target.y;
+                    }
+                    this.alpha = 1;
+                }
+            }
+            draw() {
+                ctx.globalAlpha = state === 'wandering' ? Math.max(0, Math.min(1, this.alpha)) : 1;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
+                ctx.fill();
+                ctx.globalAlpha = 1; 
+            }
+        }
+
+        // Initialize particles
+        for(let i=0; i<Math.max(targets.length, 200); i++) {
+            const p = new Particle();
+            if(i < targets.length) {
+                p.target = targets[i];
+                // Scatter targets randomly to form later
+                const randIndex = Math.floor(Math.random() * targets.length);
+                const temp = targets[i];
+                targets[i] = targets[randIndex];
+                targets[randIndex] = temp;
+            }
+            particles.push(p);
+        }
+
+        function animate() {
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = 'rgba(10, 5, 20, 0.4)'; // Darker, softer trail decay
+            ctx.fillRect(0,0, width, height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animate);
+        }
+
+        document.getElementById('openModal').addEventListener('click', () => {
+            document.getElementById('modal').style.display = 'block';
+        });
+        document.getElementById('closeModal').addEventListener('click', () => {
+            document.getElementById('modal').style.display = 'none';
+        });
+
+        document.getElementById('heart').addEventListener('click', () => {
+            state = 'forming';
+            document.getElementById('heart').style.display = 'none';
+            document.getElementById('hint').style.display = 'none';
+        });
+
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        });
+
+        animate();
+    </script>
+</body>
+</html>

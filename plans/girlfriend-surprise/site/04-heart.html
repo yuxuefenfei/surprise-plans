@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0d0610">
+    <title>给你的秘密宇宙 · 同频共振</title>
+    <style>
+        :root {
+            --c-bg-deep:    #0d0610;
+            --c-rose:       #ff3d6a;
+            --c-rose-dark:  #ea0037;
+            --c-rose-light: #ff7a9e;
+            --c-text:       #fff0f5;
+            --c-text-dim:   rgba(255, 220, 234, 0.78);
+            --c-border:     rgba(255, 255, 255, 0.12);
+            --radius-card:  22px;
+            --radius-pill:  999px;
+            --font-main:    'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            --heart-size:   clamp(90px, 20vw, 116px);
+            --ring-size:    calc(var(--heart-size) * 1.1);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            min-height: 100vh; min-height: 100svh;
+            background:
+                radial-gradient(ellipse at 50% 35%, rgba(255, 61, 106, 0.18) 0%, transparent 55%),
+                radial-gradient(ellipse at 15% 90%, rgba(160, 20, 60, 0.12) 0%, transparent 45%),
+                linear-gradient(160deg, var(--c-bg-deep) 0%, #18061a 55%, #060010 100%);
+            color: var(--c-text);
+            font-family: var(--font-main);
+            overflow-x: hidden;
+            animation: pageIn 0.65s ease both;
+        }
+
+        @keyframes pageIn {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+
+        /* ── 页面布局 ── */
+        .page {
+            min-height: 100vh; min-height: 100svh;
+            display: flex; justify-content: center;
+            padding: 92px 20px 160px;
+            position: relative;
+        }
+
+        .stage {
+            width: min(100%, 560px);
+            display: flex; flex-direction: column;
+            align-items: center; gap: 20px;
+            text-align: center; position: relative; z-index: 2;
+        }
+
+        /* ── 心形区域 ── */
+        .heart-zone {
+            position: relative;
+            width: min(72vw, 300px); height: min(72vw, 300px);
+            min-width: 220px; min-height: 220px;
+            display: flex; align-items: center; justify-content: center;
+            flex: 0 0 auto;
+        }
+
+        /* 脉冲环 */
+        .glow-ring {
+            position: absolute;
+            width: var(--ring-size); height: var(--ring-size);
+            border-radius: 50%;
+            border: 2px solid rgba(255, 61, 106, 0.4);
+            animation: pulseRing 2.6s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+            pointer-events: none; z-index: 1;
+        }
+        .glow-ring:nth-child(2) { animation-delay: 0.87s; }
+        .glow-ring:nth-child(3) { animation-delay: 1.73s; }
+
+        @keyframes pulseRing {
+            0%   { transform: scale(1);   opacity: 0.85; border-width: 3px; }
+            100% { transform: scale(5.2); opacity: 0;    border-width: 0; }
+        }
+
+        /* 心形按钮 */
+        .heart {
+            position: relative;
+            width: var(--heart-size); height: var(--heart-size);
+            background: linear-gradient(135deg, #ff6080 0%, var(--c-rose) 45%, var(--c-rose-dark) 100%);
+            border: none; padding: 0;
+            transform: rotate(-45deg);
+            box-shadow:
+                0 0 30px rgba(255, 61, 106, 0.7),
+                0 0 80px rgba(234, 0, 55, 0.4);
+            animation: heartbeat 1.25s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+            cursor: pointer; z-index: 3;
+            will-change: transform;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .heart:hover {
+            box-shadow:
+                0 0 40px rgba(255, 61, 106, 0.85),
+                0 0 100px rgba(234, 0, 55, 0.5);
+        }
+        .heart:focus-visible {
+            outline: 2px solid rgba(255, 255, 255, 0.9);
+            outline-offset: 18px;
+        }
+        .heart::before, .heart::after {
+            content: ''; position: absolute;
+            width: var(--heart-size); height: var(--heart-size);
+            background: inherit; border-radius: 50%;
+            box-shadow: 0 0 18px rgba(255, 61, 106, 0.4);
+        }
+        .heart::before { top: calc(var(--heart-size) * -0.5); left: 0; }
+        .heart::after  { top: 0; left: calc(var(--heart-size) * 0.5); }
+
+        @keyframes heartbeat {
+            0%, 35%, 70%, 100% { transform: rotate(-45deg) scale(1); }
+            17%                { transform: rotate(-45deg) scale(1.22); }
+            52%                { transform: rotate(-45deg) scale(1.1); }
+        }
+
+        /* 点击后微缩反馈 */
+        .heart.clicked {
+            transform: rotate(-45deg) scale(0.9) !important;
+            transition: transform 0.1s ease;
+        }
+
+        /* ── 文字区域 ── */
+        .headline {
+            font-size: clamp(1.75rem, 5.5vw, 2.5rem);
+            font-weight: 300;
+            letter-spacing: 0.18rem;
+            background: linear-gradient(135deg, var(--c-text) 0%, var(--c-rose-light) 60%, var(--c-rose) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            transition: opacity 0.5s ease;
+        }
+
+        .text {
+            max-width: 32rem; min-height: 4em;
+            font-size: 0.97rem; line-height: 2;
+            letter-spacing: 0.04rem;
+            color: var(--c-text-dim);
+            transition: opacity 0.5s ease;
+        }
+
+        /* ── 动作区 ── */
+        .actions {
+            width: 100%; display: flex; flex-wrap: wrap;
+            justify-content: center; gap: 10px;
+            margin-top: 8px; flex: 0 0 auto;
+        }
+
+        /* ── info-btn ── */
+        .info-btn {
+            position: fixed;
+            top: max(16px, env(safe-area-inset-top, 0px)); right: 20px;
+            z-index: 100;
+            border: 1px solid rgba(255,255,255,0.22); padding: 8px 18px;
+            border-radius: var(--radius-pill); cursor: pointer;
+            color: rgba(255,220,234,0.9); font-family: var(--font-main); font-size: 0.85rem;
+            background: rgba(14, 8, 22, 0.72);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            transition: background 0.22s, border-color 0.22s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .info-btn:hover { background: rgba(255,61,106,0.14); border-color: rgba(255,120,155,0.38); }
+
+        /* ── Modal ── */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0; z-index: 200;
+            background: rgba(5, 2, 10, 0.55);
+            backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+            align-items: center; justify-content: center;
+        }
+        .modal-overlay.is-open { display: flex; }
+        .modal {
+            background: rgba(18, 8, 28, 0.97);
+            border: 1px solid rgba(255, 61, 106, 0.35);
+            padding: 32px 28px; border-radius: var(--radius-card);
+            text-align: center; width: min(calc(100vw - 40px), 360px);
+            max-height: calc(100svh - 40px); overflow: auto;
+            box-shadow: 0 0 0 1px rgba(255,61,106,0.08), 0 20px 50px rgba(0,0,0,0.5), 0 0 40px rgba(255,61,106,0.15);
+        }
+        .modal h2 { margin: 0 0 14px; color: var(--c-rose-light); font-size: 1.15rem; font-weight: 500; letter-spacing: 0.06rem; }
+        .modal p  { line-height: 1.9; color: rgba(255,236,244,0.86); font-size: 0.95rem; margin: 0; }
+        .close-btn {
+            margin-top: 22px; padding: 9px 28px;
+            background: linear-gradient(135deg, var(--c-rose), var(--c-rose-dark));
+            border: none; color: white; font-family: var(--font-main); font-size: 0.9rem;
+            border-radius: var(--radius-pill); cursor: pointer;
+            transition: opacity 0.2s, transform 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .close-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+
+        /* ── Nav 链接（复用于 actions） ── */
+        .nav-link {
+            display: inline-flex; align-items: center; justify-content: center;
+            min-width: 150px; padding: 12px 20px; border-radius: var(--radius-pill);
+            text-decoration: none; border: 1px solid var(--c-border);
+            color: rgba(255,220,234,0.88); font-family: var(--font-main); font-size: 0.9rem;
+            background: rgba(14, 8, 22, 0.72);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            transition: opacity 0.28s, transform 0.28s, background 0.28s, border-color 0.28s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .nav-link:hover { background: rgba(255,61,106,0.1); border-color: rgba(255,100,140,0.3); transform: translateY(-1px); }
+        .nav-link.primary { border-color: rgba(255,90,130,0.55); background: rgba(255,61,106,0.16); color: #fff; }
+        .nav-link.primary:hover { background: rgba(255,61,106,0.26); border-color: rgba(255,120,155,0.7); }
+        .nav-link.is-hidden { opacity: 0; pointer-events: none; transform: translateY(8px); }
+        .nav-link.is-visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
+
+        /* ── Canvas ── */
+        .particles {
+            position: fixed; inset: 0;
+            width: 100%; height: 100%;
+            pointer-events: none; z-index: 1;
+        }
+
+        /* ── modal 打开时暂停动画 ── */
+        body.modal-open { overflow: hidden; }
+        body.modal-open .heart,
+        body.modal-open .glow-ring { animation-play-state: paused !important; }
+        body.modal-open .particles { opacity: 0.15; }
+
+        /* ── 响应式 ── */
+        @media (max-width: 520px) {
+            .page { padding: 80px 16px 148px; }
+            .stage { gap: 16px; }
+            .heart-zone { width: min(76vw, 280px); height: min(76vw, 280px); min-width: 210px; min-height: 210px; }
+            .headline { font-size: clamp(1.6rem, 7vw, 2rem); }
+            .text { font-size: 0.93rem; min-height: 5em; }
+            .actions { flex-direction: column; align-items: stretch; }
+            .nav-link { width: 100%; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            body { animation: none; }
+            .heart { animation: none; transform: rotate(-45deg); }
+            .glow-ring { animation: none; display: none; }
+        }
+    </style>
+</head>
+<body>
+    <button class="info-btn" id="openModal" aria-haspopup="dialog">寓意</button>
+    <div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true"
+         aria-labelledby="modalTitle" aria-describedby="modalDesc" tabindex="-1">
+        <div class="modal" id="modal">
+            <h2 id="modalTitle"></h2>
+            <p id="modalDesc"></p>
+            <button class="close-btn" id="closeModal">关闭</button>
+        </div>
+    </div>
+
+    <main class="page">
+        <section class="stage">
+            <div class="heart-zone">
+                <div class="glow-ring" aria-hidden="true"></div>
+                <div class="glow-ring" aria-hidden="true"></div>
+                <div class="glow-ring" aria-hidden="true"></div>
+                <button class="heart" id="mainHeart" type="button" aria-label="点一下，听听我的心跳"></button>
+            </div>
+            <h1 class="headline" id="headlineText"></h1>
+            <p class="text" id="hintText"></p>
+            <div class="actions">
+                <a class="nav-link" href="./03-letter.html">回到上一页</a>
+                <a class="nav-link primary is-hidden" id="nextLink" href="./05-stars.html" tabindex="-1"></a>
+            </div>
+        </section>
+    </main>
+
+    <canvas class="particles" id="particlesCanvas" aria-hidden="true"></canvas>
+
+    <script>
+        const CONFIG = {
+            pageTitle:          '给你的秘密宇宙 · 同频共振',
+            modalTitle:         '我的心跳，早就写满你的名字',
+            modalDesc:          '有时候我不太擅长把喜欢说得热烈，可你一出现，我那些最柔软的在意就会自己跑出来。',
+            headlineText:       '宝贝，你是我日常里的偏爱',
+            hintText:           '点一下，听听那些藏在日常里的心意。',
+            afterHeadlineText:  '我想陪你很久',
+            afterHintText:      '不是一时心动，也不是一段情绪。是以后无论遇见什么琐碎日常，我都还是最想先走向你。',
+            nextLabel:          '把最后一句轻轻说给你 →',
+            afterNextLabel:     '去看我藏到最后的那句话 →'
+        };
+
+        document.title = CONFIG.pageTitle;
+        document.getElementById('modalTitle').innerText  = CONFIG.modalTitle;
+        document.getElementById('modalDesc').innerText   = CONFIG.modalDesc;
+        document.getElementById('headlineText').innerText = CONFIG.headlineText;
+        document.getElementById('hintText').innerText    = CONFIG.hintText;
+        document.getElementById('nextLink').innerText    = CONFIG.nextLabel;
+
+        // ── 粒子系统（对象池，无 splice GC） ──
+        const canvas    = document.getElementById('particlesCanvas');
+        const ctx       = canvas.getContext('2d');
+        const heartEl   = document.getElementById('mainHeart');
+        const headlineEl = document.getElementById('headlineText');
+        const hintEl    = document.getElementById('hintText');
+        const nextLink  = document.getElementById('nextLink');
+
+        let W = canvas.width  = window.innerWidth;
+        let H = canvas.height = window.innerHeight;
+
+        const POOL_SIZE   = 200;
+        const COLORS      = ['#ff3d6a', '#ff6080', '#ea0037', '#ff9ab0', '#ffffff'];
+        const pool        = [];
+        let   poolHead    = 0;
+        let   hasExploded = false;
+        let   rafId       = null;
+        let   isReduced   = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        // 预分配粒子对象
+        for (let i = 0; i < POOL_SIZE; i++) {
+            pool.push({ x: 0, y: 0, vx: 0, vy: 0, size: 2, life: 0, decay: 0.015, color: '#ff3d6a', active: false });
+        }
+
+        function spawnParticle(cx, cy, isExplosion) {
+            const p     = pool[poolHead % POOL_SIZE];
+            poolHead++;
+            const angle = Math.random() * Math.PI * 2;
+            const speed = isExplosion ? (Math.random() * 9 + 4) : (Math.random() * 2.6 + 0.8);
+            p.x     = cx + (Math.random() - 0.5) * 30;
+            p.y     = cy + (Math.random() - 0.5) * 30;
+            p.vx    = Math.cos(angle) * speed;
+            p.vy    = Math.sin(angle) * speed;
+            p.size  = Math.random() * 3.5 + 1;
+            p.life  = 1;
+            p.decay = isExplosion ? (Math.random() * 0.018 + 0.01) : (Math.random() * 0.014 + 0.005);
+            p.color = COLORS[Math.floor(Math.random() * COLORS.length)];
+            p.active = true;
+        }
+
+        function getHeartCenter() {
+            const r = heartEl.getBoundingClientRect();
+            return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, W, H);
+
+            // 空闲时随机飘粒子
+            if (!isReduced && Math.random() > 0.80) {
+                const c = getHeartCenter();
+                spawnParticle(c.x, c.y, false);
+            }
+
+            for (let i = 0; i < POOL_SIZE; i++) {
+                const p = pool[i];
+                if (!p.active) continue;
+                p.x   += p.vx;
+                p.y   += p.vy;
+                p.vy  += 0.04;
+                p.life -= p.decay;
+                if (p.life <= 0) { p.active = false; continue; }
+                ctx.globalAlpha = Math.max(0, p.life);
+                ctx.fillStyle   = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+            rafId = requestAnimationFrame(animate);
+        }
+
+        function triggerBurst() {
+            const c     = getHeartCenter();
+            const count = Math.min(55, POOL_SIZE);
+            for (let i = 0; i < count; i++) spawnParticle(c.x, c.y, true);
+
+            // 心形微缩反馈
+            heartEl.classList.add('clicked');
+            setTimeout(() => heartEl.classList.remove('clicked'), 130);
+
+            if (!hasExploded) {
+                hasExploded = true;
+                headlineEl.style.opacity = '0';
+                hintEl.style.opacity     = '0';
+                setTimeout(() => {
+                    headlineEl.innerText     = CONFIG.afterHeadlineText;
+                    hintEl.innerText         = CONFIG.afterHintText;
+                    nextLink.innerText       = CONFIG.afterNextLabel;
+                    headlineEl.style.opacity = '1';
+                    hintEl.style.opacity     = '1';
+                }, 500);
+                nextLink.tabIndex = 0;
+                nextLink.classList.remove('is-hidden');
+                nextLink.classList.add('is-visible');
+                setTimeout(() => nextLink.focus(), 540);
+            }
+        }
+
+        heartEl.addEventListener('click', triggerBurst);
+        heartEl.addEventListener('keydown', e => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); triggerBurst(); }
+        });
+
+        // ── Modal ──
+        const modalOverlay  = document.getElementById('modalOverlay');
+        const openModalBtn  = document.getElementById('openModal');
+        const closeModalBtn = document.getElementById('closeModal');
+        let lastFocused = null;
+
+        function openModal() {
+            lastFocused = document.activeElement;
+            document.body.classList.add('modal-open');
+            modalOverlay.classList.add('is-open');
+            closeModalBtn.focus({ preventScroll: true });
+        }
+        function closeModal() {
+            document.body.classList.remove('modal-open');
+            modalOverlay.classList.remove('is-open');
+            (lastFocused instanceof HTMLElement ? lastFocused : openModalBtn).focus({ preventScroll: true });
+        }
+
+        openModalBtn.addEventListener('click', openModal);
+        closeModalBtn.addEventListener('click', closeModal);
+        modalOverlay.addEventListener('click', e => { if (e.target === modalOverlay) closeModal(); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape' && modalOverlay.classList.contains('is-open')) closeModal(); });
+
+        // ── Resize ──
+        window.addEventListener('resize', () => {
+            W = canvas.width  = window.innerWidth;
+            H = canvas.height = window.innerHeight;
+        });
+
+        animate();
+    </script>
+</body>
+</html>

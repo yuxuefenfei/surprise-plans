@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>千禧龙年时光轴 - [姓名]</title>
+    <style>
+        body { margin: 0; background: #1a0b1c; color: white; font-family: 'Segoe UI', sans-serif; overflow-x: hidden;}
+        
+        /* Dragon background pattern / stars */
+        .stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('data:image/svg+xml;utf8,<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="1" fill="white" opacity="0.3"/><circle cx="150" cy="80" r="1.5" fill="white" opacity="0.5"/><circle cx="80" cy="160" r="1" fill="white" opacity="0.2"/></svg>'); z-index: -1; }
+
+        .hero { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        
+        .heart {
+            position: relative; width: 80px; height: 80px; background: #ff2a55;
+            transform: rotate(-45deg); cursor: pointer;
+            animation: heartbeat 1.2s infinite; box-shadow: 0 0 40px #ff2a55;
+        }
+        .heart::before, .heart::after {
+            content: ''; position: absolute; width: 80px; height: 80px;
+            background: inherit; border-radius: 50%;
+        }
+        .heart::before { top: -40px; left: 0; }
+        .heart::after { top: 0; left: 40px; }
+        
+        @keyframes heartbeat {
+            0%, 30%, 60%, 100% { transform: rotate(-45deg) scale(1); }
+            15% { transform: rotate(-45deg) scale(1.15); }
+        }
+
+        .title { margin-top: 50px; font-size: 2rem; letter-spacing: 4px; opacity: 0.8; font-weight: 300;}
+        .hint { font-size: 0.9rem; color: #aaa; margin-top: 10px; animation: bounce 2s infinite; }
+
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(10px); } }
+
+        /* Timeline hidden initially */
+        .timeline-section { display: none; padding: 50px 20px; max-width: 800px; margin: 0 auto; position: relative; }
+        .timeline-line { position: absolute; left: 50%; top: 50px; bottom: 50px; width: 2px; background: rgba(255, 42, 85, 0.3); transform: translateX(-50%); }
+
+        .event { display: flex; justify-content: flex-end; padding-right: 50%; position: relative; margin: 50px 0; width: 100%; box-sizing: border-box; opacity: 0; transform: translateY(30px); transition: all 1s; will-change: transform, opacity; }
+        .event:nth-child(even) { justify-content: flex-start; padding-right: 0; padding-left: 50%; }
+        
+        .event.visible { opacity: 1; transform: translateY(0); }
+
+        .event-content { width: 80%; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 10px; backdrop-filter: blur(5px); border: 1px solid rgba(255,42,85,0.2); position: relative; }
+        .event-content::before {
+            content: ''; position: absolute; top: 20px; width: 15px; height: 15px; background: #ff2a55; border-radius: 50%; box-shadow: 0 0 10px #ff2a55;
+        }
+        .event:nth-child(odd) .event-content { margin-right: 30px; text-align: right; }
+        .event:nth-child(odd) .event-content::before { right: -38px; }
+        
+        .event:nth-child(even) .event-content { margin-left: 30px; text-align: left; }
+        .event:nth-child(even) .event-content::before { left: -38px; }
+
+        .year { color: #ff2a55; font-size: 1.5rem; font-weight: bold; margin-bottom: 10px; }
+
+        /* Modal */
+        .info-btn { position: fixed; top: 30px; right: 30px; z-index: 20; border: 1px solid rgba(255,255,255,0.3); padding: 8px 16px; border-radius: 20px; cursor: pointer; }
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(20,10,20,0.95); border: 1px solid #ff2a55; padding: 30px; border-radius: 15px; z-index: 30; text-align: center; max-width: 300px;}
+        .close-btn { margin-top: 20px; padding: 8px 24px; background: #ff2a55; border: none; color: white; border-radius: 20px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="stars"></div>
+
+    <div class="info-btn" id="openModal">📖 寓意</div>
+    <div class="modal" id="modal">
+        <h2 style="color:#ff2a55; margin-top:0;" id="modalTitle"></h2>
+        <p id="modalDesc"></p>
+        <button class="close-btn" id="closeModal">关闭</button>
+    </div>
+
+    <div class="hero">
+        <div class="heart" id="trigger"></div>
+        <div class="title" id="heroTitle"></div>
+        <div class="hint">点击开启时光机 ↓</div>
+    </div>
+
+    <div class="timeline-section" id="timeline">
+        <div class="timeline-line"></div>
+    </div>
+
+    <script>
+        const CONFIG = {
+            modalTitle: '时光轴',
+            modalDesc: '千禧年降生的灵动小白龙，跨越光阴开启了属于我们的纪元。刻度上的每一行印记，都是我想陪你慢慢走过的未来。',
+            heroTitle: '2000 · 龙之女',
+            events: [
+                { year: '2000 🐉', desc: '千禧之年，一条灵动的小龙在这个世界降生。她的名字叫[姓名]。' },
+                { year: '相遇的那天', desc: '在人生的某个节点，命运安排我们相遇。那一天，星光格外灿烂。' },
+                { year: '现在的每一天', desc: '陪伴是最长情的告白。未来的时间轴，我想和你一起填满。' },
+                { year: 'Forever', desc: '未完待续...' }
+            ]
+        };
+
+        document.getElementById('modalTitle').innerText = CONFIG.modalTitle;
+        document.getElementById('modalDesc').innerText = CONFIG.modalDesc;
+        document.getElementById('heroTitle').innerText = CONFIG.heroTitle;
+        
+        const timelineContainer = document.getElementById('timeline');
+        CONFIG.events.forEach(item => {
+            const el = document.createElement('div');
+            el.className = 'event';
+            el.innerHTML = `
+                <div class="event-content">
+                    <div class="year">${item.year}</div>
+                    <p>${item.desc}</p>
+                </div>
+            `;
+            timelineContainer.appendChild(el);
+        });
+
+        document.getElementById('openModal').addEventListener('click', () => document.getElementById('modal').style.display = 'block');
+        document.getElementById('closeModal').addEventListener('click', () => document.getElementById('modal').style.display = 'none');
+
+        document.getElementById('trigger').addEventListener('click', () => {
+            const tl = document.getElementById('timeline');
+            tl.style.display = 'block';
+            
+            // smooth scroll down
+            window.scrollTo({ top: window.innerHeight, behavior: 'smooth' });
+            
+            // Animate events on scroll and unobserve to save GPU power
+            const observer = new IntersectionObserver((entries, obs) => {
+                entries.forEach(entry => {
+                    if(entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        obs.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.5 });
+            
+            document.querySelectorAll('.event').forEach(el => observer.observe(el));
+        });
+    </script>
+</body>
+</html>

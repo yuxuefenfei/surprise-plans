@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0d0610">
+    <title>给你的秘密宇宙 · 星光收尾</title>
+    <style>
+        :root {
+            --c-bg-deep:    #0d0610;
+            --c-rose:       #ff3d6a;
+            --c-rose-dark:  #ea0037;
+            --c-rose-light: #ff7a9e;
+            --c-text:       #fff0f5;
+            --c-text-dim:   rgba(255, 220, 234, 0.78);
+            --c-border:     rgba(255, 255, 255, 0.12);
+            --radius-card:  22px;
+            --radius-pill:  999px;
+            --font-main:    'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: radial-gradient(ellipse at 50% 40%, #1e0a22 0%, #080210 55%, var(--c-bg-deep) 100%);
+            overflow: hidden;
+            font-family: var(--font-main);
+            color: var(--c-text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            min-height: 100svh;
+        }
+
+        /* ── Canvas ── */
+        #canvas {
+            position: fixed; inset: 0; z-index: 1;
+        }
+
+        /* ── 中央心形按钮 ── */
+        .heart-btn {
+            position: relative;
+            width: 80px; height: 80px;
+            background: linear-gradient(135deg, #ff6080 0%, var(--c-rose) 50%, var(--c-rose-dark) 100%);
+            transform: rotate(-45deg);
+            cursor: pointer; z-index: 10;
+            border: none; padding: 0;
+            box-shadow:
+                0 0 30px rgba(255, 61, 106, 0.75),
+                0 0 70px rgba(234, 0, 55, 0.4);
+            animation: heartbeat 1.5s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+            will-change: transform;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .heart-btn:focus-visible {
+            outline: 2px solid rgba(255,255,255,0.9);
+            outline-offset: 16px;
+        }
+        .heart-btn::before, .heart-btn::after {
+            content: ''; position: absolute;
+            width: 80px; height: 80px;
+            background: inherit; border-radius: 50%;
+        }
+        .heart-btn::before { top: -40px; left: 0; }
+        .heart-btn::after  { top: 0; left: 40px; }
+
+        @keyframes heartbeat {
+            0%, 35%, 70%, 100% { transform: rotate(-45deg) scale(1); }
+            17%                { transform: rotate(-45deg) scale(1.22); }
+            52%                { transform: rotate(-45deg) scale(1.1); }
+        }
+
+        /* 揭示时的光晕爆开 */
+        @keyframes haloReveal {
+            0%   { transform: scale(0.8); opacity: 0.8; }
+            50%  { transform: scale(2.8); opacity: 0.4; }
+            100% { transform: scale(5);   opacity: 0; }
+        }
+
+        .reveal-halo {
+            position: fixed;
+            width: 120px; height: 120px;
+            border-radius: 50%;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: radial-gradient(circle, rgba(255, 140, 170, 0.5) 0%, transparent 70%);
+            pointer-events: none; z-index: 9;
+            animation: haloReveal 1.2s ease-out forwards;
+        }
+
+        /* ── 提示文字 ── */
+        .hint {
+            position: fixed;
+            bottom: 120px; left: 50%;
+            transform: translateX(-50%);
+            z-index: 10; width: min(82vw, 500px);
+            text-align: center;
+            font-size: 1rem; line-height: 1.95;
+            letter-spacing: 0.05rem;
+            animation: hintPulse 2.5s ease-in-out infinite;
+            color: var(--c-text-dim);
+            pointer-events: none;
+        }
+        @keyframes hintPulse {
+            0%, 100% { opacity: 0.5; }
+            50%       { opacity: 1; }
+        }
+
+        /* ── info-btn ── */
+        .info-btn {
+            position: fixed;
+            top: max(16px, env(safe-area-inset-top, 0px)); right: 20px;
+            z-index: 100;
+            border: 1px solid rgba(255,255,255,0.22); padding: 8px 18px;
+            border-radius: var(--radius-pill); cursor: pointer;
+            color: rgba(255,220,234,0.9); font-family: var(--font-main); font-size: 0.85rem;
+            background: rgba(14, 8, 22, 0.72);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            transition: background 0.22s, border-color 0.22s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .info-btn:hover { background: rgba(255,61,106,0.14); border-color: rgba(255,120,155,0.38); }
+
+        /* ── Modal ── */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0; z-index: 200;
+            background: rgba(5, 2, 10, 0.55);
+            backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+            align-items: center; justify-content: center;
+        }
+        .modal-overlay.is-open { display: flex; }
+        .modal {
+            background: rgba(18, 8, 28, 0.97);
+            border: 1px solid rgba(255, 61, 106, 0.35);
+            padding: 32px 28px; border-radius: var(--radius-card);
+            text-align: center; width: min(calc(100vw - 40px), 360px);
+            box-shadow: 0 0 0 1px rgba(255,61,106,0.08), 0 20px 50px rgba(0,0,0,0.5), 0 0 40px rgba(255,61,106,0.15);
+        }
+        .modal h2 { margin: 0 0 14px; color: var(--c-rose-light); font-size: 1.15rem; font-weight: 500; letter-spacing: 0.06rem; }
+        .modal p  { line-height: 1.9; color: rgba(255,236,244,0.86); font-size: 0.95rem; margin: 0; }
+        .close-btn {
+            margin-top: 22px; padding: 9px 28px;
+            background: linear-gradient(135deg, var(--c-rose), var(--c-rose-dark));
+            border: none; color: white; font-family: var(--font-main); font-size: 0.9rem;
+            border-radius: var(--radius-pill); cursor: pointer;
+            transition: opacity 0.2s, transform 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .close-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+
+        /* ── Nav ── */
+        .nav {
+            position: fixed;
+            left: 50%; bottom: max(20px, env(safe-area-inset-bottom, 0px));
+            transform: translateX(-50%);
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
+            z-index: 50; width: min(92vw, 600px);
+        }
+        .nav-link {
+            display: inline-flex; align-items: center; justify-content: center;
+            min-width: 140px; padding: 12px 20px; border-radius: var(--radius-pill);
+            text-decoration: none; border: 1px solid var(--c-border);
+            color: rgba(255,220,234,0.88); font-family: var(--font-main); font-size: 0.9rem;
+            background: rgba(14, 8, 22, 0.72);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            transition: opacity 0.28s, transform 0.28s, background 0.28s, border-color 0.28s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .nav-link:hover { background: rgba(255,61,106,0.1); border-color: rgba(255,100,140,0.3); transform: translateY(-1px); }
+        .nav-link.primary { border-color: rgba(255,90,130,0.55); background: rgba(255,61,106,0.16); color: #fff; }
+        .nav-link.primary:hover { background: rgba(255,61,106,0.26); border-color: rgba(255,120,155,0.7); }
+        .nav-link.is-hidden { opacity: 0; pointer-events: none; transform: translateY(8px); }
+        .nav-link.is-visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
+
+        @media (max-width: 520px) {
+            .hint { bottom: 250px; font-size: 0.92rem; }
+            .nav-link { width: 100%; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .heart-btn { animation: none; transform: rotate(-45deg); }
+            .hint { animation: none; opacity: 0.8; }
+        }
+    </style>
+</head>
+<body>
+    <button class="heart-btn" id="heart" aria-label="揭晓最后答案"></button>
+    <div class="hint" id="hintText"></div>
+
+    <button class="info-btn" id="openModal" aria-haspopup="dialog">寓意</button>
+    <div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true"
+         aria-labelledby="modalTitle" aria-describedby="modalDesc" tabindex="-1">
+        <div class="modal">
+            <h2 id="modalTitle"></h2>
+            <p id="modalDesc"></p>
+            <button class="close-btn" id="closeModal">关闭</button>
+        </div>
+    </div>
+
+    <canvas id="canvas" aria-hidden="true"></canvas>
+
+    <nav class="nav" aria-label="页面导航">
+        <a class="nav-link" href="./04-heart.html">回到上一页</a>
+        <a class="nav-link primary is-hidden" id="restartLink" href="./01-password.html" tabindex="-1"></a>
+        <a class="nav-link is-hidden" id="homeLink" href="./index.html" tabindex="-1">回到开场</a>
+    </nav>
+
+    <script>
+        const CONFIG = {
+            pageTitle:    '给你的秘密宇宙 · 星光收尾',
+            targetName:   '[姓名]',
+            hintText:     '刚刚那句没说完的话，还在星光里。点一下，让它慢慢聚成我最熟悉也最偏爱的名字。',
+            modalTitle:   '后来所有日常，都更想和你有关',
+            modalDesc:    '真正重要的人，不一定总是出现在最热烈的时刻，却会出现在你每一次想分享、想依赖、想并肩的时候。',
+            restartLabel: '再看一遍这封星光情书 ↺'
+        };
+
+        document.title = CONFIG.pageTitle;
+        document.getElementById('hintText').innerText    = CONFIG.hintText;
+        document.getElementById('modalTitle').innerText  = CONFIG.modalTitle;
+        document.getElementById('modalDesc').innerText   = CONFIG.modalDesc;
+        document.getElementById('restartLink').innerText = CONFIG.restartLabel;
+
+        // ── 星光粒子系统 ──
+        const canvas = document.getElementById('canvas');
+        const ctx    = canvas.getContext('2d');
+        let W = canvas.width  = window.innerWidth;
+        let H = canvas.height = window.innerHeight;
+
+        const particles = [];
+        const targets   = [];
+        let state    = 'wandering';
+        let revealed = false;
+        let isReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        // 离屏文字渲染生成目标坐标
+        function rebuildTargets() {
+            targets.length = 0;
+
+            const TW = 600, TH = 300;
+            const offscreen = document.createElement('canvas');
+            offscreen.width  = TW;
+            offscreen.height = TH;
+            const octx = offscreen.getContext('2d');
+            octx.fillStyle  = 'white';
+
+            const maxFontSize = Math.min(180, Math.floor(W * 0.36));
+            octx.font        = `bold ${maxFontSize}px 'Segoe UI', 'PingFang SC', sans-serif`;
+            octx.textAlign   = 'center';
+            octx.textBaseline = 'middle';
+            octx.fillText(CONFIG.targetName, TW / 2, TH / 2);
+
+            const data    = octx.getImageData(0, 0, TW, TH).data;
+            const offsetX = W / 2 - TW / 2;
+            const offsetY = H / 2 - TH / 2;
+            const step    = 4;
+
+            for (let y = 0; y < TH; y += step) {
+                for (let x = 0; x < TW; x += step) {
+                    if (data[(y * TW + x) * 4 + 3] > 128) {
+                        targets.push({ x: x + offsetX, y: y + offsetY });
+                    }
+                }
+            }
+        }
+
+        rebuildTargets();
+
+        // 粒子调色板（柔和星光色）
+        const PALETTES = ['#ffffff', '#fff3f7', '#ffe8ed', '#ffbdcc', '#ffd6e0'];
+
+        class Star {
+            constructor() {
+                this.x  = Math.random() * W;
+                this.y  = Math.random() * H;
+                this.vx = (Math.random() - 0.5) * 0.28;
+                this.vy = (Math.random() - 0.5) * 0.28;
+                this.color = PALETTES[Math.floor(Math.random() * PALETTES.length)];
+                this.size  = Math.random() * 1.3 + 0.4;
+                this.target = null;
+                this.alpha  = Math.random() * 0.8 + 0.2;
+                this.alphaDir = Math.random() > 0.5 ? 1 : -1;
+                this.alphaSpeed = Math.random() * 0.008 + 0.003;
+            }
+
+            update() {
+                if (state === 'wandering') {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    if (this.x < -10) this.x = W + 10;
+                    if (this.x > W + 10) this.x = -10;
+                    if (this.y < -10) this.y = H + 10;
+                    if (this.y > H + 10) this.y = -10;
+
+                    this.alpha += this.alphaSpeed * this.alphaDir;
+                    if (this.alpha >= 1)   { this.alpha = 1;   this.alphaDir = -1; }
+                    if (this.alpha <= 0.1) { this.alpha = 0.1; this.alphaDir =  1; }
+                } else if (state === 'forming' && this.target) {
+                    const dx   = this.target.x - this.x;
+                    const dy   = this.target.y - this.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist > 1) {
+                        const ease  = dist > 120 ? 0.032 : 0.058;
+                        const drift = dist > 120 ? 0.65 : 1.1;
+                        this.x += dx * ease + (dx / dist) * drift;
+                        this.y += dy * ease + (dy / dist) * drift;
+                    } else {
+                        this.x = this.target.x;
+                        this.y = this.target.y;
+                    }
+                    this.alpha = 1;
+                }
+            }
+
+            draw() {
+                ctx.globalAlpha = Math.max(0, Math.min(1, this.alpha));
+                ctx.fillStyle   = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // 初始化星星
+        const STAR_COUNT = isReduced ? 120 : 220;
+        for (let i = 0; i < STAR_COUNT; i++) particles.push(new Star());
+
+        function assignTargets() {
+            // Fisher-Yates 洗牌目标点
+            const shuffled = [...targets];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            particles.forEach((p, i) => {
+                p.target = i < shuffled.length ? shuffled[i] : null;
+            });
+            // 补充粒子以覆盖所有目标点
+            if (shuffled.length > particles.length) {
+                for (let i = particles.length; i < shuffled.length; i++) {
+                    const s = new Star();
+                    s.target = shuffled[i];
+                    particles.push(s);
+                }
+            }
+        }
+
+        assignTargets();
+
+        // 渲染循环：用 clearRect 代替半透明 fillRect，避免额外合成开销
+        let lastTime = 0;
+        function animate(ts) {
+            const dt = ts - lastTime;
+            // 限制帧率到 ~60fps，避免高刷设备无效绘制
+            if (dt < 14) { requestAnimationFrame(animate); return; }
+            lastTime = ts;
+
+            ctx.clearRect(0, 0, W, H);
+
+            // 漫游状态用轻微拖尾感
+            if (state === 'wandering') {
+                ctx.globalAlpha = 0.18;
+                ctx.fillStyle   = '#08020f';
+                ctx.fillRect(0, 0, W, H);
+            }
+
+            ctx.globalAlpha = 1;
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+            }
+            ctx.globalAlpha = 1;
+            requestAnimationFrame(animate);
+        }
+
+        // Modal
+        const modalOverlay  = document.getElementById('modalOverlay');
+        const openModalBtn  = document.getElementById('openModal');
+        const closeModalBtn = document.getElementById('closeModal');
+        let lastFocused = null;
+
+        function openModal() { lastFocused = document.activeElement; modalOverlay.classList.add('is-open'); closeModalBtn.focus(); }
+        function closeModal() { modalOverlay.classList.remove('is-open'); (lastFocused instanceof HTMLElement ? lastFocused : openModalBtn).focus(); }
+
+        openModalBtn.addEventListener('click', openModal);
+        closeModalBtn.addEventListener('click', closeModal);
+        modalOverlay.addEventListener('click', e => { if (e.target === modalOverlay) closeModal(); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape' && modalOverlay.classList.contains('is-open')) closeModal(); });
+
+        // 揭示动作
+        const heartEl    = document.getElementById('heart');
+        const restartLink = document.getElementById('restartLink');
+        const homeLink    = document.getElementById('homeLink');
+
+        function revealAnswer() {
+            if (revealed) return;
+            state    = 'forming';
+            revealed = true;
+
+            heartEl.style.display = 'none';
+            document.getElementById('hintText').style.display = 'none';
+
+            // 光晕爆开效果
+            const halo = document.createElement('div');
+            halo.className = 'reveal-halo';
+            document.body.appendChild(halo);
+            halo.addEventListener('animationend', () => halo.remove());
+
+            assignTargets();
+
+            restartLink.tabIndex = 0;
+            homeLink.tabIndex    = 0;
+            restartLink.classList.remove('is-hidden');
+            restartLink.classList.add('is-visible');
+            homeLink.classList.remove('is-hidden');
+            homeLink.classList.add('is-visible');
+        }
+
+        heartEl.addEventListener('click', revealAnswer);
+        heartEl.addEventListener('keydown', e => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); revealAnswer(); }
+        });
+
+        // Resize（debounced）
+        let resizeTimer = null;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                W = canvas.width  = window.innerWidth;
+                H = canvas.height = window.innerHeight;
+                rebuildTargets();
+                if (state === 'forming') assignTargets();
+            }, 150);
+        });
+
+        requestAnimationFrame(animate);
+    </script>
+</body>
+</html>
