@@ -96,8 +96,8 @@ html-design/
 
 如果你想继续替换人物信息或故事细节，优先参考下面两份内部文档：
 
-- [页面剧情与文案策划.md]()
-- [文案替换清单.md]()
+- [页面剧情与文案策划.md](./plans/girlfriend-surprise/页面剧情与文案策划.md)
+- [文案替换清单.md](./plans/girlfriend-surprise/文案替换清单.md)
 
 常见的可编辑字段包括：
 
