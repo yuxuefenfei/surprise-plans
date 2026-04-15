@@ -2,7 +2,7 @@
 
 一个基于纯 `HTML/CSS/JavaScript` 的浪漫互动网页项目。仓库中既包含若干单页动画原型，也包含一套已经串联完成的多页面成品站点。
 
-当前主线作品位于 [plans/girlfriend-surprise/site](C:\Users\13080\Workspace\html-design\plans\girlfriend-surprise\site)，主题为《给你的秘密宇宙》。整套体验以“专属入口 + 时光回看 + 情书表达 + 心动强化 + 星光收束”为结构，适合做纪念日、生日、订婚、婚礼前告白等场景的静态网页礼物。
+当前主线作品位于 [plans/girlfriend-surprise/site]()，主题为《给你的秘密宇宙》。整套体验以“专属入口 + 时光回看 + 情书表达 + 心动强化 + 星光收束”为结构，适合做纪念日、生日、订婚、婚礼前告白等场景的静态网页礼物。
 
 ## 项目结构
 
@@ -41,7 +41,7 @@ html-design/
 
 ### 正式成品
 
-[plans/girlfriend-surprise/site](C:\Users\13080\Workspace\html-design\plans\girlfriend-surprise\site) 是当前已经串联完成的正式版本，页面顺序如下：
+[plans/girlfriend-surprise/site]() 是当前已经串联完成的正式版本，页面顺序如下：
 
 1. `index.html`：开场页
 2. `01-password.html`：专属解锁页
@@ -50,7 +50,7 @@ html-design/
 5. `04-heart.html`：心跳页
 6. `05-stars.html`：星光收尾页
 
-如果只想预览完整作品，请从 [site/index.html](C:\Users\13080\Workspace\html-design\plans\girlfriend-surprise\site\index.html) 打开。
+如果只想预览完整作品，请从 [site/index.html]() 打开。
 
 ## 技术特点
 
@@ -67,7 +67,7 @@ html-design/
 
 直接双击以下文件即可开始完整体验：
 
-- [plans/girlfriend-surprise/site/index.html](C:\Users\13080\Workspace\html-design\plans\girlfriend-surprise\site\index.html)
+- [plans/girlfriend-surprise/site/index.html]()
 
 由于页面之间依赖相对路径跳转，建议总是从 `index.html` 进入。
 
@@ -96,8 +96,8 @@ html-design/
 
 如果你想继续替换人物信息或故事细节，优先参考下面两份内部文档：
 
-- [页面剧情与文案策划.md](C:\Users\13080\Workspace\html-design\plans\girlfriend-surprise\页面剧情与文案策划.md)
-- [文案替换清单.md](C:\Users\13080\Workspace\html-design\plans\girlfriend-surprise\文案替换清单.md)
+- [页面剧情与文案策划.md]()
+- [文案替换清单.md]()
 
 常见的可编辑字段包括：
 
