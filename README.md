@@ -2,55 +2,75 @@
 
 一个基于纯 `HTML/CSS/JavaScript` 的浪漫互动网页项目。仓库中既包含若干单页动画原型，也包含一套已经串联完成的多页面成品站点。
 
-当前主线作品位于 [plans/girlfriend-surprise/site]()，主题为《给你的秘密宇宙》。整套体验以“专属入口 + 时光回看 + 情书表达 + 心动强化 + 星光收束”为结构，适合做纪念日、生日、订婚、婚礼前告白等场景的静态网页礼物。
+当前主线计划位于 [plans/girlfriend-surprise](./plans/girlfriend-surprise/)，主题为《给你的秘密宇宙》。整套体验以“专属入口 + 时光回看 + 情书表达 + 心动强化 + 星光收束”为结构，适合做纪念日、生日、订婚、婚礼前告白等场景的静态网页礼物。
 
 ## 项目结构
 
 ```text
 html-design/
 ├─ README.md
-├─ idea1_stars.html
-├─ idea2_password.html
-├─ idea3_timeline.html
-├─ idea4_letter.html
-├─ idea5_heart.html
-└─ plans/
-   └─ girlfriend-surprise/
-      ├─ 页面剧情与文案策划.md
-      ├─ 文案替换清单.md
-      └─ site/
-         ├─ index.html
-         ├─ 01-password.html
-         ├─ 02-timeline.html
-         ├─ 03-letter.html
-         ├─ 04-heart.html
-         └─ 05-stars.html
+├─ plans/
+│  ├─ _template/
+│  │  ├─ README.md
+│  │  ├─ assets/
+│  │  ├─ docs/
+│  │  ├─ prototypes/
+│  │  └─ site/
+│  └─ girlfriend-surprise/
+│     ├─ README.md
+│     ├─ docs/
+│     │  ├─ 页面剧情与文案策划.md
+│     │  └─ 文案替换清单.md
+│     ├─ prototypes/
+│     │  ├─ idea1_stars.html
+│     │  ├─ idea2_password.html
+│     │  ├─ idea3_timeline.html
+│     │  ├─ idea4_letter.html
+│     │  └─ idea5_heart.html
+│     └─ site/
+│        ├─ index.html
+│        ├─ 01-password.html
+│        ├─ 02-timeline.html
+│        ├─ 03-letter.html
+│        ├─ 04-heart.html
+│        └─ 05-stars.html
+├─ scripts/
+└─ ...
 ```
 
 ## 内容说明
 
 ### 动画原型
 
-根目录下的 `idea*.html` 是单页实验原型，适合做独立效果预览或继续拆分复用：
+每个 `plans/<plan-name>/` 都代表一个完整的网页编排计划，内部按下面约定放置：
 
-- `idea1_stars.html`：星点聚合成名字
-- `idea2_password.html`：密码解锁入口
-- `idea3_timeline.html`：时间轴叙事
-- `idea4_letter.html`：信封与信件动效
-- `idea5_heart.html`：爱心脉冲与粒子爆发
+- `prototypes/`：早期原型、效果实验、来自 `idea*.html` 的单页草案
+- `site/`：已经编排完成、可直接打开或部署的正式网站
+- `docs/`：剧情策划、文案替换清单、维护说明等 Markdown 文档
+- `assets/`：图片、音频、视频、字体等项目素材，有需要时再创建
+
+### 动画原型
+
+`plans/girlfriend-surprise/prototypes/` 下的 `idea*.html` 是单页实验原型，适合做独立效果预览或继续拆分复用：
+
+- [idea1_stars.html](./plans/girlfriend-surprise/prototypes/idea1_stars.html)：星点聚合成名字
+- [idea2_password.html](./plans/girlfriend-surprise/prototypes/idea2_password.html)：密码解锁入口
+- [idea3_timeline.html](./plans/girlfriend-surprise/prototypes/idea3_timeline.html)：时间轴叙事
+- [idea4_letter.html](./plans/girlfriend-surprise/prototypes/idea4_letter.html)：信封与信件动效
+- [idea5_heart.html](./plans/girlfriend-surprise/prototypes/idea5_heart.html)：爱心脉冲与粒子爆发
 
 ### 正式成品
 
-[plans/girlfriend-surprise/site]() 是当前已经串联完成的正式版本，页面顺序如下：
+[plans/girlfriend-surprise/site](./plans/girlfriend-surprise/site/) 是当前已经串联完成的正式版本，页面顺序如下：
 
-1. `index.html`：开场页
-2. `01-password.html`：专属解锁页
-3. `02-timeline.html`：时间线页
-4. `03-letter.html`：信件页
-5. `04-heart.html`：心跳页
-6. `05-stars.html`：星光收尾页
+1. [index.html](./plans/girlfriend-surprise/site/index.html)：开场页
+2. [01-password.html](./plans/girlfriend-surprise/site/01-password.html)：专属解锁页
+3. [02-timeline.html](./plans/girlfriend-surprise/site/02-timeline.html)：时间线页
+4. [03-letter.html](./plans/girlfriend-surprise/site/03-letter.html)：信件页
+5. [04-heart.html](./plans/girlfriend-surprise/site/04-heart.html)：心跳页
+6. [05-stars.html](./plans/girlfriend-surprise/site/05-stars.html)：星光收尾页
 
-如果只想预览完整作品，请从 [site/index.html]() 打开。
+如果只想预览完整作品，请从 [plans/girlfriend-surprise/site/index.html](./plans/girlfriend-surprise/site/index.html) 打开。
 
 ## 技术特点
 
@@ -67,7 +87,7 @@ html-design/
 
 直接双击以下文件即可开始完整体验：
 
-- [plans/girlfriend-surprise/site/index.html]()
+- [plans/girlfriend-surprise/site/index.html](./plans/girlfriend-surprise/site/index.html)
 
 由于页面之间依赖相对路径跳转，建议总是从 `index.html` 进入。
 
@@ -96,8 +116,8 @@ html-design/
 
 如果你想继续替换人物信息或故事细节，优先参考下面两份内部文档：
 
-- [页面剧情与文案策划.md](./plans/girlfriend-surprise/页面剧情与文案策划.md)
-- [文案替换清单.md](./plans/girlfriend-surprise/文案替换清单.md)
+- [页面剧情与文案策划.md](./plans/girlfriend-surprise/docs/页面剧情与文案策划.md)
+- [文案替换清单.md](./plans/girlfriend-surprise/docs/文案替换清单.md)
 
 常见的可编辑字段包括：
 
@@ -119,3 +139,4 @@ html-design/
 - 增加截图或录屏预览
 - 增加一个简单本地预览脚本
 - 为不同场景扩展多套文案风格版本
+- 基于 [plans/_template](./plans/_template/) 复制新的网页编排计划
