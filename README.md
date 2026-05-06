@@ -1,8 +1,11 @@
 # HTML Surprise Pages
 
-一个基于纯 `HTML/CSS/JavaScript` 的浪漫互动网页项目。仓库中既包含若干单页动画原型，也包含一套已经串联完成的多页面成品站点。
+一个基于纯 `HTML/CSS/JavaScript` 的互动网页编排项目。仓库中既包含若干单页动画原型，也包含已经串联完成的多页面成品站点。
 
-当前主线计划位于 [plans/girlfriend-surprise](./plans/girlfriend-surprise/)，主题为《给你的秘密宇宙》。整套体验以“专属入口 + 时光回看 + 情书表达 + 心动强化 + 星光收束”为结构，适合做纪念日、生日、订婚、婚礼前告白等场景的静态网页礼物。
+当前已有两套计划：
+
+- [plans/girlfriend-surprise](./plans/girlfriend-surprise/)：浪漫告白方向，主题为《给你的秘密宇宙》
+- [plans/cyber-dossier](./plans/cyber-dossier/)：赛博侦探方向，主题为《赛博侦探机密档案》
 
 ## 项目结构
 
@@ -11,6 +14,12 @@ html-design/
 ├─ README.md
 ├─ plans/
 │  ├─ _template/
+│  │  ├─ README.md
+│  │  ├─ assets/
+│  │  ├─ docs/
+│  │  ├─ prototypes/
+│  │  └─ site/
+│  ├─ cyber-dossier/
 │  │  ├─ README.md
 │  │  ├─ assets/
 │  │  ├─ docs/
@@ -40,7 +49,7 @@ html-design/
 
 ## 内容说明
 
-### 动画原型
+### 计划目录
 
 每个 `plans/<plan-name>/` 都代表一个完整的网页编排计划，内部按下面约定放置：
 
@@ -49,7 +58,9 @@ html-design/
 - `docs/`：剧情策划、文案替换清单、维护说明等 Markdown 文档
 - `assets/`：图片、音频、视频、字体等项目素材，有需要时再创建
 
-### 动画原型
+### 当前计划
+
+#### Girlfriend Surprise
 
 `plans/girlfriend-surprise/prototypes/` 下的 `idea*.html` 是单页实验原型，适合做独立效果预览或继续拆分复用：
 
@@ -71,6 +82,19 @@ html-design/
 6. [05-stars.html](./plans/girlfriend-surprise/site/05-stars.html)：星光收尾页
 
 如果只想预览完整作品，请从 [plans/girlfriend-surprise/site/index.html](./plans/girlfriend-surprise/site/index.html) 打开。
+
+#### Cyber Dossier
+
+[plans/cyber-dossier/site](./plans/cyber-dossier/site/) 是一套赛博侦探风格的机密档案互动站点，页面顺序如下：
+
+1. [index.html](./plans/cyber-dossier/site/index.html)：案件接入页
+2. [01-briefing.html](./plans/cyber-dossier/site/01-briefing.html)：任务简报页
+3. [02-evidence.html](./plans/cyber-dossier/site/02-evidence.html)：证据墙页
+4. [03-intercept.html](./plans/cyber-dossier/site/03-intercept.html)：信号截获页
+5. [04-reconstruction.html](./plans/cyber-dossier/site/04-reconstruction.html)：事件重构页
+6. [05-verdict.html](./plans/cyber-dossier/site/05-verdict.html)：结案报告页
+
+如果只想预览完整作品，请从 [plans/cyber-dossier/site/index.html](./plans/cyber-dossier/site/index.html) 打开。
 
 ## 技术特点
 
@@ -102,9 +126,9 @@ html-design/
 
 部署时保留目录结构即可，不需要打包构建。
 
-## 当前成品的文案定位
+## Girlfriend Surprise 的文案定位
 
-当前 `site` 版本的文案已经统一到下面的方向：
+`plans/girlfriend-surprise/site` 版本的文案已经统一到下面的方向：
 
 - 温柔克制
 - 偏生活化
@@ -114,10 +138,16 @@ html-design/
 
 ## 如何继续定制
 
-如果你想继续替换人物信息或故事细节，优先参考下面两份内部文档：
+如果你想继续替换 `girlfriend-surprise` 的人物信息或故事细节，优先参考下面两份内部文档：
 
 - [页面剧情与文案策划.md](./plans/girlfriend-surprise/docs/页面剧情与文案策划.md)
 - [文案替换清单.md](./plans/girlfriend-surprise/docs/文案替换清单.md)
+
+如果你想继续替换 `cyber-dossier` 的目标代号、证据线索或最终揭示，优先参考：
+
+- [页面剧情与文案策划.md](./plans/cyber-dossier/docs/页面剧情与文案策划.md)
+- [文案替换清单.md](./plans/cyber-dossier/docs/文案替换清单.md)
+- [谜题与线索设计.md](./plans/cyber-dossier/docs/谜题与线索设计.md)
 
 常见的可编辑字段包括：
 

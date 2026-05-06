@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#050809">
+    <title>Cyber Dossier - Signal Intercept</title>
+    <link rel="stylesheet" href="../assets/dossier.css">
+    <script>
+        const CONFIG = {
+            passcode: "TRACE",
+            hint: "提示：证据墙最常出现的动作，是继续追踪。",
+            decoded: "截获内容：所有看似冷静的记录，最终都在说明一件事：你很特别。"
+        };
+    </script>
+</head>
+<body>
+    <main class="shell">
+        <header class="topbar">
+            <div class="brand"><span class="brand-mark"></span><span>Signal Intercept</span></div>
+            <div class="status">SHORT CODE REQUIRED</div>
+        </header>
+        <section class="hero">
+            <div class="panel">
+                <p class="eyebrow">encrypted packet</p>
+                <h1>DECODE</h1>
+                <p>监听器抓到一段短包。输入短码即可破译。系统友情提示：答案不区分大小写。</p>
+                <input class="code-input" id="code" autocomplete="off" placeholder="输入 TRACE">
+                <div class="btn-row">
+                    <button class="btn" id="decode" type="button">执行破译</button>
+                    <button class="btn secondary" id="hint" type="button">显示提示</button>
+                </div>
+                <p class="notice" id="notice"></p>
+            </div>
+            <aside class="terminal" id="packet">
+                <span class="terminal-line">> packet hash: 7A-1F-CC-09</span>
+                <span class="terminal-line">> payload: #### ## #######</span>
+                <span class="terminal-line warn">> human factor detected</span>
+                <span class="terminal-line">> waiting for short code...</span>
+            </aside>
+        </section>
+        <nav class="nav">
+            <a class="btn secondary" href="./02-evidence.html">返回证据墙</a>
+            <a class="btn hidden" id="next" href="./04-reconstruction.html">重构事件</a>
+        </nav>
+    </main>
+    <script>
+        const input = document.getElementById("code");
+        const notice = document.getElementById("notice");
+        document.getElementById("hint").addEventListener("click", () => notice.textContent = CONFIG.hint);
+        document.getElementById("decode").addEventListener("click", () => {
+            if (input.value.trim().toUpperCase() !== CONFIG.passcode) {
+                notice.textContent = "短码不匹配。系统没有生气，只是很冷静地拒绝了。";
+                notice.className = "notice danger";
+                return;
+            }
+            notice.textContent = "破译完成。建议不要在终端前微笑，摄像头可能会记录。";
+            notice.className = "notice success";
+            document.getElementById("packet").innerHTML = `<span class="terminal-line warn">> decrypt success</span><span class="terminal-line">${CONFIG.decoded}</span>`;
+            document.getElementById("next").classList.remove("hidden");
+        });
+        input.addEventListener("keydown", e => { if (e.key === "Enter") document.getElementById("decode").click(); });
+    </script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#050809">
+    <title>Cyber Dossier - Case Access</title>
+    <link rel="stylesheet" href="../assets/dossier.css">
+    <script>
+        const CONFIG = {
+            caseId: "CD-0427",
+            targetAlias: "[目标代号]",
+            headline: "CASE ACCESS",
+            intro: "你被临时调入一桩异常档案。系统声称目标并不危险，只是过分值得注意。"
+        };
+    </script>
+</head>
+<body>
+    <main class="shell">
+        <header class="topbar">
+            <div class="brand"><span class="brand-mark"></span><span>Cyber Dossier</span></div>
+            <div class="status">SECURE CHANNEL / ONLINE</div>
+        </header>
+        <section class="hero">
+            <div class="panel">
+                <p class="eyebrow">case id <span id="caseId"></span></p>
+                <h1 id="headline"></h1>
+                <p id="intro"></p>
+                <p>本调查不涉及危险品、财务诈骗或世界末日。它只涉及一个人为什么总能精准占用你的注意力。</p>
+                <div class="btn-row">
+                    <a class="btn" href="./01-briefing.html">接入案件</a>
+                    <button class="btn secondary" id="rerunBoot" type="button">重放启动日志</button>
+                </div>
+            </div>
+            <aside class="terminal" aria-live="polite">
+                <span class="terminal-line warn">> initializing cold case shell...</span>
+                <span class="terminal-line">> loading target alias: <span id="alias"></span></span>
+                <span class="terminal-line">> scanning public excuses...</span>
+                <span class="terminal-line error">> excuse database: suspiciously empty</span>
+                <span class="terminal-line">> recommendation: proceed.</span>
+            </aside>
+        </section>
+        <nav class="nav">
+            <span class="tag">NO PASSWORD REQUIRED</span>
+            <a class="btn" href="./01-briefing.html">下一步 / Briefing</a>
+        </nav>
+    </main>
+    <script>
+        document.getElementById("caseId").textContent = CONFIG.caseId;
+        document.getElementById("headline").textContent = CONFIG.headline;
+        document.getElementById("intro").textContent = CONFIG.intro;
+        document.getElementById("alias").textContent = CONFIG.targetAlias;
+        document.getElementById("rerunBoot").addEventListener("click", () => location.reload());
+    </script>
+</body>
+</html>

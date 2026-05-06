@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#050809">
+    <title>Cyber Dossier - Evidence Board</title>
+    <link rel="stylesheet" href="../assets/dossier.css">
+    <script>
+        const CONFIG = {
+            clues: [
+                ["A01", "反复出现的聊天窗口", "频率异常，但调查员没有关闭。"],
+                ["B14", "被记住的小习惯", "系统判定：这不是巧合，是长期观察。"],
+                ["C09", "优先级上调记录", "某些消息会自动插队，假装公平已经失败。"],
+                ["D22", "情绪稳定装置", "目标出现后，噪声降低 37%。"],
+                ["E07", "未提交的解释", "调查员多次试图说清原因，均被沉默取代。"],
+                ["F11", "最终指向", "全部线索指向同一目标。令人遗憾，系统也磕到了。"]
+            ]
+        };
+    </script>
+</head>
+<body>
+    <main class="shell">
+        <header class="topbar">
+            <div class="brand"><span class="brand-mark"></span><span>Evidence Board</span></div>
+            <div class="status">CLICK ALL CLUES</div>
+        </header>
+        <section class="panel">
+            <p class="eyebrow">evidence analysis</p>
+            <h1>TRACE MAP</h1>
+            <p>点击证据卡，系统会把可疑细节加入案卷。全部读取后，才能截获下一段信号。</p>
+        </section>
+        <section class="grid" id="board"></section>
+        <section class="panel">
+            <div class="progress"><span id="bar"></span></div>
+            <p class="notice" id="notice">0/6 条线索已读取。</p>
+            <div class="btn-row">
+                <a class="btn secondary" href="./01-briefing.html">返回简报</a>
+                <a class="btn hidden" id="next" href="./03-intercept.html">截获信号</a>
+            </div>
+        </section>
+    </main>
+    <script>
+        const board = document.getElementById("board");
+        const opened = new Set();
+        CONFIG.clues.forEach(([code, title, detail], index) => {
+            const card = document.createElement("button");
+            card.className = "card";
+            card.type = "button";
+            card.innerHTML = `<span class="tag">${code}</span><h3>${title}</h3><p>权限锁定。点击读取。</p>`;
+            card.addEventListener("click", () => {
+                opened.add(index);
+                card.innerHTML = `<span class="tag">${code}</span><h3>${title}</h3><p>${detail}</p>`;
+                card.style.background = "rgba(8, 30, 32, 0.98)";
+                document.getElementById("bar").style.setProperty("--value", `${opened.size / CONFIG.clues.length * 100}%`);
+                document.getElementById("notice").textContent = opened.size === CONFIG.clues.length ? "证据墙闭环完成。下一步：监听异常信号。" : `${opened.size}/6 条线索已读取。`;
+                document.getElementById("next").classList.toggle("hidden", opened.size !== CONFIG.clues.length);
+            });
+            board.appendChild(card);
+        });
+    </script>
+</body>
+</html>

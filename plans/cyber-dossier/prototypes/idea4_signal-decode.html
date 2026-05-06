@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Idea 4 - Signal Decode</title>
+    <style>
+        body { margin: 0; min-height: 100vh; display: grid; place-items: center; color: #18ffd6; background: #050809; font-family: Consolas, monospace; }
+        .box { width: min(720px, calc(100vw - 28px)); border: 1px solid rgba(24,255,214,.36); padding: 26px; background: rgba(6,20,22,.95); }
+        input, button { min-height: 44px; border: 1px solid #18ffd6; background: rgba(0,0,0,.35); color: #d9fff8; padding: 10px 12px; font: 1rem Consolas, monospace; }
+        button { cursor: pointer; }
+        #out { margin-top: 18px; color: #ffd166; min-height: 4em; line-height: 1.7; }
+    </style>
+</head>
+<body>
+    <section class="box">
+        <h1>SIGNAL DECODE</h1>
+        <p>> payload: ##-####-####</p>
+        <input id="code" placeholder="输入 TRACE">
+        <button id="go">decode</button>
+        <div id="out">waiting...</div>
+    </section>
+    <script>
+        document.getElementById("go").addEventListener("click", () => {
+            const ok = document.getElementById("code").value.trim().toUpperCase() === "TRACE";
+            document.getElementById("out").textContent = ok ? "decoded: 你很特别。系统建议保留这条记录。" : "denied: 短码不对，但姿态很专业。";
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#050809">
+    <title>Cyber Dossier - Reconstruction</title>
+    <link rel="stylesheet" href="../assets/dossier.css">
+    <script>
+        const CONFIG = {
+            correctOrder: ["observe", "notice", "save", "admit"],
+            scenes: {
+                save: ["03", "保存细节", "系统发现调查员开始记住一些无关紧要但又很重要的小事。"],
+                observe: ["01", "首次观察", "目标进入视野。调查员声称只是普通记录。系统保留意见。"],
+                admit: ["04", "承认异常", "所有证据闭环：这不是巧合，是认真在意。"],
+                notice: ["02", "频繁注意", "目标出现频率上升。调查员打开消息的速度不符合冷静人设。"]
+            }
+        };
+    </script>
+</head>
+<body>
+    <main class="shell">
+        <header class="topbar">
+            <div class="brand"><span class="brand-mark"></span><span>Event Reconstruction</span></div>
+            <div class="status">SORT BY CASE ORDER</div>
+        </header>
+        <section class="panel">
+            <p class="eyebrow">rebuild sequence</p>
+            <h1>RECONSTRUCT</h1>
+            <p>点击卡片，把事件按正确顺序送入重构队列。点错可以重置。轻解谜，不虐待调查员。</p>
+        </section>
+        <section class="grid" id="pool"></section>
+        <section class="panel">
+            <h2>重构队列</h2>
+            <div class="grid" id="queue"></div>
+            <p class="notice" id="notice">等待选择第 1 个事件。</p>
+            <div class="btn-row">
+                <button class="btn secondary" id="reset" type="button">重置队列</button>
+                <a class="btn hidden" id="next" href="./05-verdict.html">生成结案报告</a>
+            </div>
+        </section>
+        <nav class="nav">
+            <a class="btn secondary" href="./03-intercept.html">返回信号页</a>
+        </nav>
+    </main>
+    <script>
+        const pool = document.getElementById("pool");
+        const queue = document.getElementById("queue");
+        const notice = document.getElementById("notice");
+        const picked = [];
+        function renderPool() {
+            pool.innerHTML = "";
+            Object.entries(CONFIG.scenes).forEach(([key, [num, title, text]]) => {
+                if (picked.includes(key)) return;
+                const card = document.createElement("button");
+                card.className = "card";
+                card.type = "button";
+                card.innerHTML = `<span class="tag">EVENT ${num}</span><h3>${title}</h3><p>${text}</p>`;
+                card.addEventListener("click", () => pick(key));
+                pool.appendChild(card);
+            });
+        }
+        function renderQueue() {
+            queue.innerHTML = picked.map(key => {
+                const [num, title] = CONFIG.scenes[key];
+                return `<div class="card"><span class="tag">${num}</span><h3>${title}</h3><p>已进入重构队列。</p></div>`;
+            }).join("");
+        }
+        function pick(key) {
+            const expected = CONFIG.correctOrder[picked.length];
+            if (key !== expected) {
+                notice.textContent = "顺序异常。系统建议从最早观察开始，不要跳到自我暴露。";
+                notice.className = "notice danger";
+                return;
+            }
+            picked.push(key);
+            notice.className = "notice";
+            notice.textContent = picked.length === CONFIG.correctOrder.length ? "事件重构完成。结论已经无法撤回。" : `正确。继续选择第 ${picked.length + 1} 个事件。`;
+            document.getElementById("next").classList.toggle("hidden", picked.length !== CONFIG.correctOrder.length);
+            renderPool();
+            renderQueue();
+        }
+        document.getElementById("reset").addEventListener("click", () => {
+            picked.length = 0;
+            notice.className = "notice";
+            notice.textContent = "队列已重置。冷静很好，重新来过也很好。";
+            document.getElementById("next").classList.add("hidden");
+            renderPool();
+            renderQueue();
+        });
+        renderPool();
+    </script>
+</body>
+</html>

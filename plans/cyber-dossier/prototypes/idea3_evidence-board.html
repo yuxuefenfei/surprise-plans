@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Idea 3 - Evidence Board</title>
+    <style>
+        body { margin: 0; min-height: 100vh; background: #050809; color: #d9fff8; font-family: Consolas, monospace; display: grid; place-items: center; }
+        .board { width: min(960px, calc(100vw - 24px)); display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; position: relative; }
+        .clue { min-height: 150px; border: 1px solid rgba(24,255,214,.32); background: rgba(8,24,26,.92); padding: 18px; cursor: pointer; box-shadow: 0 0 22px rgba(24,255,214,.12); }
+        .clue.active { border-color: #ffd166; background: rgba(35,29,12,.9); }
+        .clue span { color: #ffd166; }
+        .line { height: 2px; background: linear-gradient(90deg, transparent, #18ffd6, transparent); grid-column: 1 / -1; opacity: .5; }
+        @media (max-width: 720px) { .board { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <section class="board">
+        <button class="clue"><span>A01</span><h2>聊天窗口</h2><p>频率异常。</p></button>
+        <button class="clue"><span>B14</span><h2>小习惯</h2><p>被过度准确地记住。</p></button>
+        <button class="clue"><span>C09</span><h2>优先级</h2><p>消息自动插队。</p></button>
+        <div class="line"></div>
+        <button class="clue"><span>D22</span><h2>稳定装置</h2><p>噪声降低。</p></button>
+        <button class="clue"><span>E07</span><h2>未提交解释</h2><p>沉默次数过多。</p></button>
+        <button class="clue"><span>F11</span><h2>最终指向</h2><p>同一目标。</p></button>
+    </section>
+    <script>
+        document.querySelectorAll(".clue").forEach(btn => btn.addEventListener("click", () => btn.classList.toggle("active")));
+    </script>
+</body>
+</html>

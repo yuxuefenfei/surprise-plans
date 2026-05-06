@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#050809">
+    <title>Cyber Dossier - Verdict</title>
+    <link rel="stylesheet" href="../assets/dossier.css">
+    <script>
+        const CONFIG = {
+            targetAlias: "[目标代号]",
+            verdictTitle: "CASE CLOSED",
+            finalLines: [
+                "调查结论：目标不是异常。",
+                "异常的是调查员不断把注意力交给同一个人。",
+                "系统建议：停止伪装冷静，正式承认这份特别。"
+            ],
+            restartLabel: "重新接入案件"
+        };
+    </script>
+</head>
+<body>
+    <main class="shell">
+        <header class="topbar">
+            <div class="brand"><span class="brand-mark"></span><span>Final Verdict</span></div>
+            <div class="status">ARCHIVE READY</div>
+        </header>
+        <section class="hero">
+            <div class="panel">
+                <p class="eyebrow">classified report</p>
+                <h1 id="title"></h1>
+                <p>档案对象：<span class="tag" id="target"></span></p>
+                <div class="btn-row">
+                    <button class="btn" id="print" type="button">打印结论</button>
+                    <a class="btn secondary" id="restart" href="./index.html"></a>
+                </div>
+            </div>
+            <aside class="terminal" id="report">
+                <span class="terminal-line warn">> report buffer empty</span>
+                <span class="terminal-line">> press PRINT VERDICT</span>
+            </aside>
+        </section>
+        <nav class="nav">
+            <a class="btn secondary" href="./04-reconstruction.html">返回重构页</a>
+            <span class="tag">DOSSIER SEALED</span>
+        </nav>
+    </main>
+    <script>
+        document.getElementById("title").textContent = CONFIG.verdictTitle;
+        document.getElementById("target").textContent = CONFIG.targetAlias;
+        document.getElementById("restart").textContent = CONFIG.restartLabel;
+        document.getElementById("print").addEventListener("click", () => {
+            const report = document.getElementById("report");
+            report.innerHTML = "";
+            CONFIG.finalLines.forEach((line, index) => {
+                setTimeout(() => {
+                    const row = document.createElement("span");
+                    row.className = index === CONFIG.finalLines.length - 1 ? "terminal-line warn" : "terminal-line";
+                    row.textContent = `> ${line}`;
+                    report.appendChild(row);
+                }, index * 420);
+            });
+        });
+    </script>
+</body>
+</html>

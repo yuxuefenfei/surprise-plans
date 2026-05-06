@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#050809">
+    <title>Cyber Dossier - Briefing</title>
+    <link rel="stylesheet" href="../assets/dossier.css">
+    <script>
+        const CONFIG = {
+            targetAlias: "[目标代号]",
+            clearanceLabel: "LEVEL 02 / OBSERVER",
+            briefing: [
+                ["目标特征", "出现时通常伴随注意力偏移、语气变轻、计划被重新排序。"],
+                ["风险等级", "低危。主要风险是让调查员开始认真保存细节。"],
+                ["行动建议", "保持冷静，继续调查，不要在第一份简报就承认自己很在意。"]
+            ]
+        };
+    </script>
+</head>
+<body>
+    <main class="shell">
+        <header class="topbar">
+            <div class="brand"><span class="brand-mark"></span><span>Briefing</span></div>
+            <div class="status" id="clearance"></div>
+        </header>
+        <section class="panel">
+            <p class="eyebrow">target dossier</p>
+            <h1 id="target"></h1>
+            <p>系统要求你完成一次身份扫描。请点击下方档案卡，确认你不是路过的无关群众。</p>
+        </section>
+        <section class="grid" id="cards"></section>
+        <section class="panel">
+            <p class="eyebrow">scan progress</p>
+            <div class="progress"><span id="bar"></span></div>
+            <p class="notice" id="notice">待扫描 3 项。调查员，请不要假装没看见按钮。</p>
+            <div class="btn-row">
+                <a class="btn secondary" href="./index.html">返回接入页</a>
+                <a class="btn hidden" id="next" href="./02-evidence.html">进入证据墙</a>
+            </div>
+        </section>
+    </main>
+    <script>
+        document.getElementById("target").textContent = CONFIG.targetAlias;
+        document.getElementById("clearance").textContent = CONFIG.clearanceLabel;
+        const cards = document.getElementById("cards");
+        const seen = new Set();
+        CONFIG.briefing.forEach(([title, text], index) => {
+            const card = document.createElement("button");
+            card.className = "card";
+            card.type = "button";
+            card.innerHTML = `<span class="tag">SCAN ${index + 1}</span><h3>${title}</h3><p>${text}</p>`;
+            card.addEventListener("click", () => {
+                seen.add(index);
+                card.style.borderColor = "rgba(255,209,102,.9)";
+                document.getElementById("bar").style.setProperty("--value", `${seen.size / CONFIG.briefing.length * 100}%`);
+                document.getElementById("notice").textContent = seen.size === 3 ? "身份扫描完成。结论：你确实很适合继续查下去。" : `已扫描 ${seen.size}/3 项。`;
+                document.getElementById("next").classList.toggle("hidden", seen.size !== 3);
+            });
+            cards.appendChild(card);
+        });
+    </script>
+</body>
+</html>

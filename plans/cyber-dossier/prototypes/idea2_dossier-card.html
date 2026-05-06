@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Idea 2 - Dossier Card</title>
+    <style>
+        body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: radial-gradient(circle at top, rgba(24,255,214,.16), transparent 38%), #050809; color: #d9fff8; font-family: "Segoe UI", sans-serif; }
+        .card { width: min(420px, calc(100vw - 30px)); border: 1px solid rgba(24,255,214,.38); background: rgba(7,22,24,.94); padding: 24px; box-shadow: 0 0 34px rgba(24,255,214,.18); position: relative; overflow: hidden; }
+        .card::before { content: "CLASSIFIED"; position: absolute; right: -38px; top: 26px; transform: rotate(35deg); color: rgba(255,209,102,.28); font: 700 1.2rem Consolas, monospace; }
+        .photo { height: 170px; border: 1px dashed rgba(24,255,214,.45); display: grid; place-items: center; color: #18ffd6; font-family: Consolas, monospace; background: repeating-linear-gradient(90deg, rgba(24,255,214,.08) 0 2px, transparent 2px 9px); }
+        h1 { color: #18ffd6; font-family: Consolas, monospace; }
+        button { border: 1px solid #18ffd6; background: rgba(24,255,214,.08); color: #d9fff8; padding: 12px 16px; font-family: Consolas, monospace; cursor: pointer; }
+        .locked p { filter: blur(5px); user-select: none; }
+        .tag { color: #ffd166; font-family: Consolas, monospace; }
+    </style>
+</head>
+<body>
+    <article class="card locked" id="card">
+        <div class="photo">TARGET IMAGE / REDACTED</div>
+        <p class="tag">DOSSIER CARD</p>
+        <h1>[目标代号]</h1>
+        <p>可疑点：总能在很短时间内改变调查员的注意力分配。</p>
+        <button id="unlock">解除遮罩</button>
+    </article>
+    <script>
+        document.getElementById("unlock").addEventListener("click", () => document.getElementById("card").classList.remove("locked"));
+    </script>
+</body>
+</html>
