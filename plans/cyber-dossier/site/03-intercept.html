@@ -6,12 +6,12 @@
     <meta name="theme-color" content="#050809">
     <title>Cyber Dossier - Signal Intercept</title>
     <link rel="stylesheet" href="../assets/dossier.css">
+    <script src="../assets/dossier-config.js"></script>
     <script>
         const CONFIG = {
+            ...DOSSIER_CONFIG,
+            ...DOSSIER_CONFIG.pages.intercept,
             stage: 3,
-            passcode: "TRACE",
-            hint: "提示：证据墙最常出现的动作，是继续追踪。",
-            decoded: "截获内容：所有看似冷静的记录，最终都在说明一件事：你很特别。"
         };
     </script>
     <script src="../assets/dossier-nav.js" defer></script>

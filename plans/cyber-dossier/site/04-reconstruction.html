@@ -6,16 +6,12 @@
     <meta name="theme-color" content="#050809">
     <title>Cyber Dossier - Reconstruction</title>
     <link rel="stylesheet" href="../assets/dossier.css">
+    <script src="../assets/dossier-config.js"></script>
     <script>
         const CONFIG = {
+            ...DOSSIER_CONFIG,
+            ...DOSSIER_CONFIG.pages.reconstruction,
             stage: 4,
-            correctOrder: ["observe", "notice", "save", "admit"],
-            scenes: {
-                save: ["03", "保存细节", "系统发现调查员开始记住一些无关紧要但又很重要的小事。"],
-                observe: ["01", "首次观察", "目标进入视野。调查员声称只是普通记录。系统保留意见。"],
-                admit: ["04", "承认异常", "所有证据闭环：这不是巧合，是认真在意。"],
-                notice: ["02", "频繁注意", "目标出现频率上升。调查员打开消息的速度不符合冷静人设。"]
-            }
         };
     </script>
     <script src="../assets/dossier-nav.js" defer></script>

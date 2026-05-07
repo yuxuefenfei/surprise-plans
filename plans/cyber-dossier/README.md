@@ -33,6 +33,6 @@
 - 修改正式体验优先编辑 `site/`
 - 替换人物信息和隐藏内容时看 `docs/文案替换清单.md`
 - 调整谜题流程时看 `docs/谜题与线索设计.md`
-- 准备把各页 `CONFIG` 抽成统一数据时看 `docs/配置蓝图.md`
+- 统一内容配置位于 `assets/dossier-config.js`，字段说明见 `docs/配置蓝图.md`
 - 案件进度轨道由 `assets/dossier-nav.js` 注入，页面阶段由每页 `CONFIG.stage` 控制
 - 保持深黑、霓虹青绿、警戒黄的视觉系统，避免回到浪漫粉色调

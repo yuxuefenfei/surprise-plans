@@ -6,13 +6,12 @@
     <meta name="theme-color" content="#050809">
     <title>Cyber Dossier - Case Access</title>
     <link rel="stylesheet" href="../assets/dossier.css">
+    <script src="../assets/dossier-config.js"></script>
     <script>
         const CONFIG = {
-            caseId: "CD-0427",
+            ...DOSSIER_CONFIG,
+            ...DOSSIER_CONFIG.pages.access,
             stage: 0,
-            targetAlias: "[目标代号]",
-            headline: "CASE ACCESS",
-            intro: "你被临时调入一桩异常档案。系统声称目标并不危险，只是过分值得注意。"
         };
     </script>
     <script src="../assets/dossier-nav.js" defer></script>

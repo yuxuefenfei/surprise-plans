@@ -6,17 +6,12 @@
     <meta name="theme-color" content="#050809">
     <title>Cyber Dossier - Evidence Board</title>
     <link rel="stylesheet" href="../assets/dossier.css">
+    <script src="../assets/dossier-config.js"></script>
     <script>
         const CONFIG = {
+            ...DOSSIER_CONFIG,
+            ...DOSSIER_CONFIG.pages.evidence,
             stage: 2,
-            clues: [
-                ["A01", "反复出现的聊天窗口", "频率异常，但调查员没有关闭。"],
-                ["B14", "被记住的小习惯", "系统判定：这不是巧合，是长期观察。"],
-                ["C09", "优先级上调记录", "某些消息会自动插队，假装公平已经失败。"],
-                ["D22", "情绪稳定装置", "目标出现后，噪声降低 37%。"],
-                ["E07", "未提交的解释", "调查员多次试图说清原因，均被沉默取代。"],
-                ["F11", "最终指向", "全部线索指向同一目标。令人遗憾，系统也磕到了。"]
-            ]
         };
     </script>
     <script src="../assets/dossier-nav.js" defer></script>

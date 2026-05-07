@@ -6,16 +6,12 @@
     <meta name="theme-color" content="#050809">
     <title>Cyber Dossier - Briefing</title>
     <link rel="stylesheet" href="../assets/dossier.css">
+    <script src="../assets/dossier-config.js"></script>
     <script>
         const CONFIG = {
+            ...DOSSIER_CONFIG,
+            ...DOSSIER_CONFIG.pages.briefing,
             stage: 1,
-            targetAlias: "[目标代号]",
-            clearanceLabel: "LEVEL 02 / OBSERVER",
-            briefing: [
-                ["目标特征", "出现时通常伴随注意力偏移、语气变轻、计划被重新排序。"],
-                ["风险等级", "低危。主要风险是让调查员开始认真保存细节。"],
-                ["行动建议", "保持冷静，继续调查，不要在第一份简报就承认自己很在意。"]
-            ]
         };
     </script>
     <script src="../assets/dossier-nav.js" defer></script>

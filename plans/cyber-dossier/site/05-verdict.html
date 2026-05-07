@@ -6,17 +6,12 @@
     <meta name="theme-color" content="#050809">
     <title>Cyber Dossier - Verdict</title>
     <link rel="stylesheet" href="../assets/dossier.css">
+    <script src="../assets/dossier-config.js"></script>
     <script>
         const CONFIG = {
+            ...DOSSIER_CONFIG,
+            ...DOSSIER_CONFIG.pages.verdict,
             stage: 5,
-            targetAlias: "[目标代号]",
-            verdictTitle: "CASE CLOSED",
-            finalLines: [
-                "调查结论：目标不是异常。",
-                "异常的是调查员不断把注意力交给同一个人。",
-                "系统建议：停止伪装冷静，正式承认这份特别。"
-            ],
-            restartLabel: "重新接入案件"
         };
     </script>
     <script src="../assets/dossier-nav.js" defer></script>
