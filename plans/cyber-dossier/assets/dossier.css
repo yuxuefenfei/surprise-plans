@@ -110,6 +110,37 @@ a { color: inherit; }
     font-size: 0.78rem;
 }
 
+.case-rail {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.case-step {
+    min-height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(24, 255, 214, 0.2);
+    background: rgba(8, 20, 22, 0.62);
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    text-decoration: none;
+    text-transform: uppercase;
+}
+
+.case-step.is-done {
+    border-color: rgba(24, 255, 214, 0.52);
+    color: var(--cyan);
+}
+
+.case-step.is-active {
+    border-color: rgba(255, 209, 102, 0.82);
+    color: var(--yellow);
+    background: rgba(255, 209, 102, 0.09);
+}
+
 .hero {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(280px, 420px);
@@ -302,6 +333,7 @@ button.card {
 @media (max-width: 760px) {
     .shell { width: min(100vw - 20px, 680px); padding: 12px 0; }
     .hero, .grid { grid-template-columns: 1fr; }
+    .case-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .topbar, .nav { align-items: stretch; flex-direction: column; }
     .btn { width: 100%; text-align: center; }
 }
