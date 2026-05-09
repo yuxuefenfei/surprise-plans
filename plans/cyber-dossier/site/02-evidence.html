@@ -4,33 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#050809">
-    <title>Cyber Dossier - Evidence Board</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='none' stroke='%2318ffd6' stroke-width='3' d='M16 3 29 16 16 29 3 16Z'/%3E%3Cpath stroke='%23ffd166' stroke-width='2' d='M10 16h12'/%3E%3C/svg%3E">
+    <title>证据墙 · 赛博侦探</title>
     <link rel="stylesheet" href="../assets/dossier.css">
-    <script src="../assets/dossier-config.js"></script>
-    <script>
-        const CONFIG = {
-            ...DOSSIER_CONFIG,
-            ...DOSSIER_CONFIG.pages.evidence,
-            stage: 2,
-        };
-    </script>
+    <script src="../assets/dossier-config.js" defer></script>
     <script src="../assets/dossier-nav.js" defer></script>
 </head>
 <body>
     <main class="shell">
         <header class="topbar">
-            <div class="brand"><span class="brand-mark"></span><span>Evidence Board</span></div>
-            <div class="status">CLICK ALL CLUES</div>
+            <div class="brand"><span class="brand-mark"></span><span>证据墙</span></div>
+            <div class="status">配对模式</div>
         </header>
+
         <section class="panel">
-            <p class="eyebrow">evidence analysis</p>
-            <h1>TRACE MAP</h1>
-            <p>点击证据卡，系统会把可疑细节加入案卷。全部读取后，才能截获下一段信号。</p>
+            <p class="eyebrow">证据分析</p>
+            <h1>线索关联图</h1>
+            <p id="instruction"></p>
+            <p style="font-size:0.82rem;color:var(--muted);margin-top:8px;">
+                <span style="color:var(--cyan)">● 线索</span> 是观察到的现象，
+                <span style="color:var(--yellow)">● 推论</span> 是现象背后的含义。
+                将线索与对应的推论配对。
+            </p>
         </section>
+
         <section class="grid" id="board"></section>
+
+        <!-- 终端反馈区 -->
+        <aside class="terminal" id="feedbackTerminal" aria-live="polite" style="min-height:3em;">
+            <div class="terminal-header">
+                <span class="terminal-title">EVIDENCE ANALYSIS</span>
+                <span class="terminal-dots"><span></span><span></span><span></span></span>
+            </div>
+        </aside>
+
         <section class="panel">
-            <div class="progress"><span id="bar"></span></div>
-            <p class="notice" id="notice">0/6 条线索已读取。</p>
+            <div class="progress" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"><span id="bar"></span></div>
+            <p class="notice" id="notice" aria-live="polite"></p>
             <div class="btn-row">
                 <a class="btn secondary" href="./01-briefing.html">返回简报</a>
                 <a class="btn hidden" id="next" href="./03-intercept.html">截获信号</a>
@@ -38,22 +48,169 @@
         </section>
     </main>
     <script>
-        const board = document.getElementById("board");
-        const opened = new Set();
-        CONFIG.clues.forEach(([code, title, detail], index) => {
-            const card = document.createElement("button");
-            card.className = "card";
-            card.type = "button";
-            card.innerHTML = `<span class="tag">${code}</span><h3>${title}</h3><p>权限锁定。点击读取。</p>`;
-            card.addEventListener("click", () => {
-                opened.add(index);
-                card.innerHTML = `<span class="tag">${code}</span><h3>${title}</h3><p>${detail}</p>`;
-                card.style.background = "rgba(8, 30, 32, 0.98)";
-                document.getElementById("bar").style.setProperty("--value", `${opened.size / CONFIG.clues.length * 100}%`);
-                document.getElementById("notice").textContent = opened.size === CONFIG.clues.length ? "证据墙闭环完成。下一步：监听异常信号。" : `${opened.size}/6 条线索已读取。`;
-                document.getElementById("next").classList.toggle("hidden", opened.size !== CONFIG.clues.length);
+        document.addEventListener("DOMContentLoaded", () => {
+            document.getElementById("instruction").textContent = CONFIG.instruction;
+            const total = CONFIG.pairs.length;
+            document.getElementById("notice").textContent = CONFIG.initialNotice;
+
+            const board = document.getElementById("board");
+            const feedback = document.getElementById("feedbackTerminal");
+            let selectedCard = null;
+            let matched = new Set();
+            let errorCount = 0;
+
+            function appendFeedback(text, type) {
+                const span = document.createElement("span");
+                span.className = "terminal-line" + (type === "error" ? " error" : type === "success" ? " warn" : "");
+                span.textContent = "> " + text;
+                feedback.appendChild(span);
+            }
+
+            // 构建卡片数据
+            const cardData = [];
+            CONFIG.pairs.forEach((pair, i) => {
+                const clueClue = CONFIG.clues.find(c => c[0] === pair.clue);
+                const conClue = CONFIG.clues.find(c => c[0] === pair.conclusion);
+                if (clueClue) {
+                    cardData.push({
+                        id: `clue-${i}`,
+                        code: pair.clue,
+                        cardType: "clue",
+                        typeName: "线索",
+                        pairIndex: i,
+                        title: clueClue[1],
+                        detail: clueClue[2]
+                    });
+                }
+                if (conClue) {
+                    cardData.push({
+                        id: `con-${i}`,
+                        code: pair.conclusion,
+                        cardType: "conclusion",
+                        typeName: "推论",
+                        pairIndex: i,
+                        title: conClue[1],
+                        detail: conClue[2]
+                    });
+                }
             });
-            board.appendChild(card);
+
+            // 洗牌
+            cardData.sort(() => Math.random() - 0.5);
+
+            // 渲染卡片
+            cardData.forEach(data => {
+                const card = document.createElement("button");
+                card.className = "card clue-card";
+                card.type = "button";
+                card.dataset.id = data.id;
+                card.dataset.cardType = data.cardType;
+                card.dataset.pair = data.pairIndex;
+                card.dataset.code = data.code;
+
+                const typeColor = data.cardType === "clue" ? "var(--cyan)" : "var(--yellow)";
+                card.innerHTML = `
+                    <span class="tag" style="border-color:${typeColor};color:${typeColor}">${data.code} · ${data.typeName}</span>
+                    <h3>${data.title}</h3>
+                    <p>${data.detail}</p>
+                `;
+                card.addEventListener("click", () => onCardClick(card));
+                // 键盘支持
+                card.addEventListener("keydown", (e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        onCardClick(card);
+                    }
+                });
+                board.appendChild(card);
+            });
+
+            function onCardClick(card) {
+                if (matched.has(parseInt(card.dataset.pair))) return;
+                if (card.classList.contains("pair-matched")) return;
+
+                if (window.DossierAudio) window.DossierAudio.keyClick();
+
+                if (!selectedCard) {
+                    selectedCard = card;
+                    card.classList.add("pair-selected");
+                    document.getElementById("notice").textContent = `已选中「${card.querySelector("h3").textContent}」，请选择一张${card.dataset.cardType === "clue" ? "推论" : "线索"}卡进行配对。`;
+                    document.getElementById("notice").className = "notice";
+                } else if (selectedCard === card) {
+                    card.classList.remove("pair-selected");
+                    selectedCard = null;
+                    document.getElementById("notice").textContent = "已取消选择。";
+                    document.getElementById("notice").className = "notice";
+                } else {
+                    if (selectedCard.dataset.cardType === card.dataset.cardType) {
+                        document.getElementById("notice").textContent = `「${card.querySelector("h3").textContent}」也是${card.dataset.cardType === "clue" ? "线索" : "推论"}，请选择不同类型的卡片配对。`;
+                        document.getElementById("notice").className = "notice danger";
+                        selectedCard.classList.remove("pair-selected");
+                        selectedCard = null;
+                        return;
+                    }
+
+                    const first = selectedCard;
+                    const second = card;
+                    first.classList.remove("pair-selected");
+
+                    if (first.dataset.pair === second.dataset.pair) {
+                        matched.add(parseInt(first.dataset.pair));
+                        first.classList.add("pair-matched");
+                        second.classList.add("pair-matched");
+
+                        const pair = CONFIG.pairs[parseInt(first.dataset.pair)];
+                        [first, second].forEach(c => {
+                            const reveal = document.createElement("div");
+                            reveal.className = "pair-reveal";
+                            reveal.textContent = `关联揭示：${pair.matchText}`;
+                            c.appendChild(reveal);
+                        });
+
+                        if (window.DossierAudio) window.DossierAudio.unlock();
+                        appendFeedback(`配对成功：${pair.matchText}`, "success");
+
+                        const pct = matched.size / total * 100;
+                        document.getElementById("bar").style.setProperty("--value", `${pct}%`);
+                        document.querySelector(".progress").setAttribute("aria-valuenow", Math.round(pct));
+                        document.getElementById("notice").textContent = matched.size === total
+                            ? CONFIG.completeNotice
+                            : CONFIG.matchSuccessNotice + `（${pair.matchText}）`;
+                        document.getElementById("notice").className = "notice success";
+
+                        if (matched.size === total) {
+                            document.getElementById("next").classList.remove("hidden");
+                        }
+                    } else {
+                        errorCount++;
+                        if (window.DossierStats) DossierStats.recordError();
+                        if (window.DossierAudio) window.DossierAudio.wrong();
+
+                        first.classList.add("pair-wrong");
+                        second.classList.add("pair-wrong");
+                        appendFeedback("关联性不足。这两条证据之间没有直接联系。", "error");
+                        document.getElementById("notice").textContent = CONFIG.matchFailNotice;
+                        document.getElementById("notice").className = "notice danger";
+
+                        if (errorCount >= 3 && errorCount % 3 === 0) {
+                            const unmatched = CONFIG.pairs.filter((_, i) => !matched.has(i));
+                            if (unmatched.length > 0) {
+                                const hint = unmatched[0];
+                                const clueTitle = CONFIG.clues.find(c => c[0] === hint.clue)[1];
+                                setTimeout(() => {
+                                    document.getElementById("notice").innerHTML += `<br><span style="color:var(--muted);font-size:0.78rem">💡 提示：「${clueTitle}」这条线索和什么有关？</span>`;
+                                }, 600);
+                            }
+                        }
+
+                        setTimeout(() => {
+                            first.classList.remove("pair-wrong");
+                            second.classList.remove("pair-wrong");
+                        }, 500);
+                    }
+                    selectedCard = null;
+                }
+            }
         });
     </script>
 </body>

@@ -4,54 +4,74 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#050809">
-    <title>Cyber Dossier - Case Access</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='none' stroke='%2318ffd6' stroke-width='3' d='M16 3 29 16 16 29 3 16Z'/%3E%3Cpath stroke='%23ffd166' stroke-width='2' d='M10 16h12'/%3E%3C/svg%3E">
+    <title>机密档案 · 赛博侦探</title>
     <link rel="stylesheet" href="../assets/dossier.css">
-    <script src="../assets/dossier-config.js"></script>
-    <script>
-        const CONFIG = {
-            ...DOSSIER_CONFIG,
-            ...DOSSIER_CONFIG.pages.access,
-            stage: 0,
-        };
-    </script>
+    <script src="../assets/dossier-config.js" defer></script>
     <script src="../assets/dossier-nav.js" defer></script>
 </head>
 <body>
     <main class="shell">
         <header class="topbar">
-            <div class="brand"><span class="brand-mark"></span><span>Cyber Dossier</span></div>
-            <div class="status">SECURE CHANNEL / ONLINE</div>
+            <div class="brand"><span class="brand-mark"></span><span>赛博侦探</span></div>
+            <div class="status">加密信道 · 在线</div>
         </header>
         <section class="hero">
             <div class="panel">
-                <p class="eyebrow">case id <span id="caseId"></span></p>
+                <p class="eyebrow">案件编号 <span id="caseId"></span></p>
                 <h1 id="headline"></h1>
                 <p id="intro"></p>
-                <p>本调查不涉及危险品、财务诈骗或世界末日。它只涉及一个人为什么总能精准占用你的注意力。</p>
+                <p id="subIntro"></p>
                 <div class="btn-row">
-                    <a class="btn" href="./01-briefing.html">接入案件</a>
+                    <a class="btn" id="enterBtn" href="./01-briefing.html"></a>
                     <button class="btn secondary" id="rerunBoot" type="button">重放启动日志</button>
                 </div>
             </div>
-            <aside class="terminal" aria-live="polite">
-                <span class="terminal-line warn">> initializing cold case shell...</span>
-                <span class="terminal-line">> loading target alias: <span id="alias"></span></span>
-                <span class="terminal-line">> scanning public excuses...</span>
-                <span class="terminal-line error">> excuse database: suspiciously empty</span>
-                <span class="terminal-line">> recommendation: proceed.</span>
+            <aside class="terminal" id="bootTerminal" aria-live="polite">
+                <div class="terminal-header">
+                    <span class="terminal-title">SYSTEM BOOT</span>
+                    <span class="terminal-dots"><span></span><span></span><span></span></span>
+                </div>
             </aside>
         </section>
         <nav class="nav">
-            <span class="tag">NO PASSWORD REQUIRED</span>
-            <a class="btn" href="./01-briefing.html">下一步 / Briefing</a>
+            <span class="tag">无需密码 · 但需要真诚</span>
+            <a class="btn" href="./01-briefing.html" id="nextLabel"></a>
         </nav>
     </main>
     <script>
-        document.getElementById("caseId").textContent = CONFIG.caseId;
-        document.getElementById("headline").textContent = CONFIG.headline;
-        document.getElementById("intro").textContent = CONFIG.intro;
-        document.getElementById("alias").textContent = CONFIG.targetAlias;
-        document.getElementById("rerunBoot").addEventListener("click", () => location.reload());
+        document.addEventListener("DOMContentLoaded", () => {
+            document.getElementById("caseId").textContent = CONFIG.caseId;
+            document.getElementById("headline").textContent = CONFIG.headline;
+            document.getElementById("intro").textContent = CONFIG.intro;
+            document.getElementById("subIntro").textContent = CONFIG.subIntro;
+            document.getElementById("enterBtn").textContent = CONFIG.enterLabel;
+            document.getElementById("nextLabel").textContent = CONFIG.nextLabel;
+
+            const aliasSpan = document.createElement("span");
+            aliasSpan.id = "alias";
+            aliasSpan.textContent = CONFIG.targetAlias;
+
+            const terminal = document.getElementById("bootTerminal");
+            CONFIG.bootLines.forEach((line, index) => {
+                const span = document.createElement("span");
+                span.className = line.className;
+                if (index === 1) {
+                    span.appendChild(document.createTextNode("> 加载目标代号："));
+                    span.appendChild(aliasSpan);
+                } else {
+                    span.textContent = line.text;
+                }
+                span.style.animationDelay = `${index * 0.4}s`;
+                terminal.appendChild(span);
+            });
+
+            const cursor = document.createElement("span");
+            cursor.className = "cursor";
+            terminal.appendChild(cursor);
+
+            document.getElementById("rerunBoot").addEventListener("click", () => location.reload());
+        });
     </script>
 </body>
 </html>

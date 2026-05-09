@@ -4,58 +4,330 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#050809">
-    <title>Cyber Dossier - Verdict</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='none' stroke='%2318ffd6' stroke-width='3' d='M16 3 29 16 16 29 3 16Z'/%3E%3Cpath stroke='%23ffd166' stroke-width='2' d='M10 16h12'/%3E%3C/svg%3E">
+    <title>结案报告 · 赛博侦探</title>
     <link rel="stylesheet" href="../assets/dossier.css">
-    <script src="../assets/dossier-config.js"></script>
-    <script>
-        const CONFIG = {
-            ...DOSSIER_CONFIG,
-            ...DOSSIER_CONFIG.pages.verdict,
-            stage: 5,
-        };
-    </script>
+    <script src="../assets/dossier-config.js" defer></script>
     <script src="../assets/dossier-nav.js" defer></script>
 </head>
 <body>
     <main class="shell">
         <header class="topbar">
-            <div class="brand"><span class="brand-mark"></span><span>Final Verdict</span></div>
-            <div class="status">ARCHIVE READY</div>
+            <div class="brand"><span class="brand-mark"></span><span>结案报告</span></div>
+            <div class="status">档案封存</div>
         </header>
+
         <section class="hero">
-            <div class="panel">
-                <p class="eyebrow">classified report</p>
+            <div class="panel" id="mainPanel">
+                <p class="eyebrow">机密报告</p>
                 <h1 id="title"></h1>
-                <p>档案对象：<span class="tag" id="target"></span></p>
+                <p><span id="targetLabel"></span><span class="tag" id="target"></span></p>
                 <div class="btn-row">
-                    <button class="btn" id="print" type="button">打印结论</button>
+                    <button class="btn" id="print" type="button"></button>
                     <a class="btn secondary" id="restart" href="./index.html"></a>
                 </div>
             </div>
-            <aside class="terminal" id="report">
-                <span class="terminal-line warn">> report buffer empty</span>
-                <span class="terminal-line">> press PRINT VERDICT</span>
-            </aside>
+            <aside class="terminal" id="report" aria-live="polite"></aside>
         </section>
+
+        <!-- 通关评价 -->
+        <section class="panel" id="ratingPanel" style="display:none;">
+            <p class="eyebrow">调查评价</p>
+            <h2 id="ratingLabel" style="font-size:1.8rem;margin-bottom:8px;"></h2>
+            <p id="ratingDesc" style="color:var(--muted);"></p>
+            <div id="ratingStats" style="margin-top:12px;font-family:var(--mono);font-size:0.82rem;color:var(--muted);"></div>
+        </section>
+
+        <!-- 隐藏结局（完美通关） -->
+        <section class="panel" id="hiddenEnding" style="display:none;">
+            <div class="hidden-ending">
+                <div class="ending-title">🏆 隐藏结局已解锁</div>
+                <div class="ending-text" id="endingText"></div>
+            </div>
+        </section>
+
+        <!-- 第二案入口 -->
+        <section class="panel" id="case2Panel" style="display:none;">
+            <p class="eyebrow">新的异常信号</p>
+            <h2 style="font-size:1.2rem;color:var(--text);">系统检测到新的数据波动</h2>
+            <p style="color:var(--muted);margin-top:8px;">第一案已结案，但关于目标的记忆数据仍在持续增长。系统建议开启深入调查。</p>
+            <div class="btn-row">
+                <a class="btn" id="case2Btn" href="./index.html?case=2">开启第二案</a>
+            </div>
+        </section>
+
+        <!-- 分享面板 -->
+        <section class="panel" id="sharePanel" style="display:none;">
+            <h3>📤 生成专属档案</h3>
+            <p style="font-size:0.82rem;color:var(--muted);">输入TA的名字，生成一个专属链接发给TA。</p>
+            <div class="btn-row" style="margin-top:10px;">
+                <label class="sr-only" for="shareTarget">TA的名字</label>
+                <input class="code-input" id="shareTarget" name="target" autocomplete="name" placeholder="输入TA的名字" style="flex:1;" />
+                <button class="btn" id="genLink" type="button">生成链接</button>
+            </div>
+            <div id="shareOutput" class="share-link-output" style="display:none;"></div>
+        </section>
+
         <nav class="nav">
             <a class="btn secondary" href="./04-reconstruction.html">返回重构页</a>
-            <span class="tag">DOSSIER SEALED</span>
+            <span class="tag">档案已封存</span>
         </nav>
     </main>
     <script>
-        document.getElementById("title").textContent = CONFIG.verdictTitle;
-        document.getElementById("target").textContent = CONFIG.targetAlias;
-        document.getElementById("restart").textContent = CONFIG.restartLabel;
-        document.getElementById("print").addEventListener("click", () => {
+        document.addEventListener("DOMContentLoaded", () => {
+            document.getElementById("title").textContent = CONFIG.verdictTitle;
+            document.getElementById("target").textContent = CONFIG.targetAlias;
+            document.getElementById("targetLabel").textContent = CONFIG.targetLabel;
+            document.getElementById("restart").textContent = CONFIG.restartLabel;
+            const printBtn = document.getElementById("print");
+            printBtn.textContent = CONFIG.printLabel;
+            const restartLink = document.getElementById("restart");
+
             const report = document.getElementById("report");
-            report.innerHTML = "";
-            CONFIG.finalLines.forEach((line, index) => {
-                setTimeout(() => {
-                    const row = document.createElement("span");
-                    row.className = index === CONFIG.finalLines.length - 1 ? "terminal-line warn" : "terminal-line";
-                    row.textContent = `> ${line}`;
-                    report.appendChild(row);
-                }, index * 420);
+            const rpHdr = document.createElement("div");
+            rpHdr.className = "terminal-header";
+            rpHdr.innerHTML = `<span class="terminal-title">CASE CLOSED</span><span class="terminal-dots"><span></span><span></span><span></span></span>`;
+            report.appendChild(rpHdr);
+            CONFIG.initialLines.forEach((line, index) => {
+                const span = document.createElement("span");
+                span.className = line.className;
+                span.textContent = line.text;
+                span.style.animationDelay = `${index * 0.3}s`;
+                report.appendChild(span);
+            });
+
+            // ===== 彩蛋系统 =====
+            const eggs = CONFIG.easterEggs;
+            let foundEggs = new Set();
+            let deepScanMode = false;
+
+            function initDeepScan() {
+                deepScanMode = true;
+                const panel = document.getElementById("mainPanel");
+                const hint = document.createElement("div");
+                hint.className = "deep-scan-hint";
+                hint.textContent = CONFIG.deepScanHint;
+                panel.appendChild(hint);
+
+                const counter = document.createElement("div");
+                counter.className = "egg-counter";
+                counter.id = "eggCounter";
+                counter.textContent = CONFIG.eggsFound.replace("{found}", "0").replace("{total}", String(eggs.length));
+                panel.appendChild(counter);
+
+                markEggTriggers(report);
+                markEggTriggers(panel);
+
+                // 显示分享面板
+                document.getElementById("sharePanel").style.display = "block";
+
+                // 通关评价
+                showRating();
+
+                // 第二案入口（只在第一案结案后显示）
+                if (window.DossierStats?.case !== "2") {
+                    setTimeout(() => {
+                        document.getElementById("case2Panel").style.display = "block";
+                    }, 2000);
+                }
+            }
+
+            // ===== 通关评价 =====
+            function showRating() {
+                const stats = window.DossierStats || { errors: 0 };
+                const errors = stats.errors || 0;
+                const rating = CONFIG.rating || DOSSIER_CONFIG.rating || {};
+                let rank;
+                if (errors === 0) rank = "S";
+                else if (errors <= 3) rank = "A";
+                else if (errors <= 8) rank = "B";
+                else rank = "C";
+
+                const info = rating[rank] || { label: rank, desc: "调查完成。", color: "var(--text)" };
+
+                document.getElementById("ratingLabel").textContent = info.label;
+                document.getElementById("ratingLabel").style.color = info.color;
+                document.getElementById("ratingDesc").textContent = info.desc;
+
+                const elapsed = stats.startTime ? Math.round((Date.now() - stats.startTime) / 1000) : 0;
+                const mins = Math.floor(elapsed / 60);
+                const secs = elapsed % 60;
+                document.getElementById("ratingStats").innerHTML =
+                    `失误次数：${errors}｜用时：${mins}分${secs}秒｜彩蛋：待探索`;
+
+                document.getElementById("ratingPanel").style.display = "block";
+
+                // 完美通关隐藏结局
+            if (errors === 0) {
+                const assistant = (CONFIG.narrative && CONFIG.narrative.assistant)
+                    || (DOSSIER_CONFIG.narrative && DOSSIER_CONFIG.narrative.assistant)
+                    || {};
+                    const endingText = assistant.perfect || "系统评价：完美调查。";
+                    document.getElementById("endingText").textContent = endingText;
+                    document.getElementById("hiddenEnding").style.display = "block";
+                    if (window.DossierAudio) window.DossierAudio.unlock();
+                }
+            }
+
+            // ===== 彩蛋触发词标记 =====
+            function markEggTriggers(container) {
+                eggs.forEach((egg, i) => {
+                    if (foundEggs.has(i)) return;
+                    highlightText(container, egg.text, i);
+                });
+            }
+
+            function highlightText(container, triggerText, eggIndex) {
+                const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
+                const nodesToProcess = [];
+                while (walker.nextNode()) {
+                    if (walker.currentNode.textContent.includes(triggerText)) {
+                        nodesToProcess.push(walker.currentNode);
+                    }
+                }
+                nodesToProcess.forEach(textNode => {
+                    const span = document.createElement("span");
+                    span.className = "easter-egg-trigger";
+                    span.dataset.egg = eggIndex;
+                    span.setAttribute("role", "button");
+                    span.setAttribute("tabindex", "0");
+                    const parts = textNode.textContent.split(triggerText);
+                    const parent = textNode.parentNode;
+                    parts.forEach((part, pi) => {
+                        if (part) parent.insertBefore(document.createTextNode(part), textNode);
+                        if (pi < parts.length - 1) {
+                            const trigger = span.cloneNode();
+                            trigger.textContent = triggerText;
+                            const reveal = () => revealEgg(eggIndex);
+                            trigger.addEventListener("click", reveal);
+                            trigger.addEventListener("keydown", (e) => {
+                                if (e.key === "Enter" || e.key === " ") { e.preventDefault(); reveal(); }
+                            });
+                            parent.insertBefore(trigger, textNode);
+                        }
+                    });
+                    textNode.remove();
+                });
+            }
+
+            function revealEgg(index) {
+                if (foundEggs.has(index)) return;
+                foundEggs.add(index);
+                const egg = eggs[index];
+
+                document.querySelectorAll(`.easter-egg-trigger[data-egg="${index}"]`).forEach(el => {
+                    el.classList.add("found");
+                });
+
+                const reveal = document.createElement("div");
+                reveal.className = "easter-egg-reveal";
+                reveal.textContent = `> 隐藏信息 #${foundEggs.size}：${egg.reveal}`;
+                report.appendChild(reveal);
+
+                if (window.DossierAudio) window.DossierAudio.reveal();
+
+                const counter = document.getElementById("eggCounter");
+                if (counter) {
+                    counter.textContent = CONFIG.eggsFound.replace("{found}", String(foundEggs.size)).replace("{total}", String(eggs.length));
+                }
+
+                if (foundEggs.size === eggs.length) {
+                    setTimeout(() => {
+                        const final = document.createElement("div");
+                        final.className = "easter-egg-reveal";
+                        final.style.borderColor = "var(--cyan)";
+                        final.style.color = "var(--cyan)";
+                        final.textContent = `> ${CONFIG.allEggsFound}`;
+                        report.appendChild(final);
+                        // 更新评价面板中的彩蛋统计
+                        const statsEl = document.getElementById("ratingStats");
+                        if (statsEl) {
+                            const txt = statsEl.innerHTML;
+                            statsEl.innerHTML = txt.replace("待探索", `已发现 ${eggs.length}/${eggs.length}`);
+                        }
+                    }, 800);
+                }
+            }
+
+            // ===== 打印报告 =====
+            let printed = false;
+            printBtn.addEventListener("click", () => {
+                if (printed) return;
+                printed = true;
+                report.innerHTML = "";
+                printBtn.textContent = CONFIG.printedLabel;
+                printBtn.disabled = true;
+
+                CONFIG.finalLines.forEach((line, index) => {
+                    setTimeout(() => {
+                        const row = document.createElement("span");
+                        row.className = index === CONFIG.finalLines.length - 1 ? "terminal-line warn" : "terminal-line";
+                        row.textContent = `> ${line}`;
+                        report.appendChild(row);
+
+                        if (index === CONFIG.finalLines.length - 1) {
+                            setTimeout(() => report.classList.add("flash"), 200);
+                            setTimeout(() => report.classList.remove("flash"), 600);
+                            setTimeout(() => initDeepScan(), 500);
+                        }
+                    }, index * 1000);
+                });
+            });
+
+            // ===== 分享链接生成 =====
+            document.getElementById("genLink").addEventListener("click", () => {
+                const target = document.getElementById("shareTarget").value.trim();
+                if (!target) return;
+
+                const base = new URL("./index.html", location.href);
+                const params = new URLSearchParams();
+                params.set("target", target);
+                if (new URLSearchParams(location.search).get("case") === "2") {
+                    params.set("case", "2");
+                }
+                base.search = params.toString();
+                const link = base.href;
+
+                const output = document.getElementById("shareOutput");
+                output.style.display = "block";
+                output.replaceChildren();
+                const linkText = document.createElement("div");
+                linkText.textContent = link;
+                output.appendChild(linkText);
+
+                const copyBtn = document.createElement("button");
+                copyBtn.className = "btn secondary";
+                copyBtn.style.marginTop = "8px";
+                copyBtn.textContent = "复制链接";
+                copyBtn.addEventListener("click", () => {
+                    navigator.clipboard.writeText(link).then(() => {
+                        copyBtn.textContent = "已复制 ✓";
+                        setTimeout(() => copyBtn.textContent = "复制链接", 2000);
+                    }).catch(() => {
+                        copyBtn.textContent = "复制失败";
+                        setTimeout(() => copyBtn.textContent = "复制链接", 2000);
+                    });
+                });
+                output.appendChild(copyBtn);
+            });
+
+            // ===== URL 参数个性化 =====
+            const urlParams = new URLSearchParams(location.search);
+            const urlTarget = urlParams.get("target");
+            if (urlTarget) {
+                CONFIG.targetAlias = urlTarget;
+                document.getElementById("target").textContent = urlTarget;
+                document.title = `${urlTarget}的档案 · 赛博侦探`;
+            }
+
+            restartLink.addEventListener("click", () => {
+                if (window.resetDossierProgress) window.resetDossierProgress();
+            });
+
+            // ===== 第二案按钮音效 =====
+            document.getElementById("case2Btn")?.addEventListener("click", () => {
+                if (window.resetDossierProgress) window.resetDossierProgress("2");
+                if (window.DossierAudio) window.DossierAudio.unlock();
             });
         });
     </script>

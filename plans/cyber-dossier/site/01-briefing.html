@@ -4,34 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#050809">
-    <title>Cyber Dossier - Briefing</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='none' stroke='%2318ffd6' stroke-width='3' d='M16 3 29 16 16 29 3 16Z'/%3E%3Cpath stroke='%23ffd166' stroke-width='2' d='M10 16h12'/%3E%3C/svg%3E">
+    <title>任务简报 · 赛博侦探</title>
     <link rel="stylesheet" href="../assets/dossier.css">
-    <script src="../assets/dossier-config.js"></script>
-    <script>
-        const CONFIG = {
-            ...DOSSIER_CONFIG,
-            ...DOSSIER_CONFIG.pages.briefing,
-            stage: 1,
-        };
-    </script>
+    <script src="../assets/dossier-config.js" defer></script>
     <script src="../assets/dossier-nav.js" defer></script>
 </head>
 <body>
     <main class="shell">
         <header class="topbar">
-            <div class="brand"><span class="brand-mark"></span><span>Briefing</span></div>
+            <div class="brand"><span class="brand-mark"></span><span>任务简报</span></div>
             <div class="status" id="clearance"></div>
         </header>
+
         <section class="panel">
-            <p class="eyebrow">target dossier</p>
+            <p class="eyebrow">目标档案</p>
             <h1 id="target"></h1>
-            <p>系统要求你完成一次身份扫描。请点击下方档案卡，确认你不是路过的无关群众。</p>
+            <p id="instruction"></p>
         </section>
-        <section class="grid" id="cards"></section>
-        <section class="panel">
-            <p class="eyebrow">scan progress</p>
-            <div class="progress"><span id="bar"></span></div>
-            <p class="notice" id="notice">待扫描 3 项。调查员，请不要假装没看见按钮。</p>
+
+        <!-- 问答区域 -->
+        <section class="panel" id="questionPanel">
+            <p class="eyebrow" id="questionLabel"></p>
+            <h2 id="questionText" style="font-size:1.1rem;color:var(--text);"></h2>
+            <div class="btn-row" id="questionOptions" style="flex-direction:column;align-items:stretch;"></div>
+            <p class="notice" id="questionNotice" aria-live="polite" style="min-height:20px;"></p>
+        </section>
+
+        <!-- 档案卡区域 -->
+        <section class="grid" id="cards" style="display:none;"></section>
+
+        <!-- 进度区域 -->
+        <section class="panel" id="progressPanel" style="display:none;">
+            <p class="eyebrow">扫描进度</p>
+            <div class="progress" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"><span id="bar"></span></div>
+            <p class="notice" id="notice" aria-live="polite"></p>
             <div class="btn-row">
                 <a class="btn secondary" href="./index.html">返回接入页</a>
                 <a class="btn hidden" id="next" href="./02-evidence.html">进入证据墙</a>
@@ -39,23 +46,168 @@
         </section>
     </main>
     <script>
-        document.getElementById("target").textContent = CONFIG.targetAlias;
-        document.getElementById("clearance").textContent = CONFIG.clearanceLabel;
-        const cards = document.getElementById("cards");
-        const seen = new Set();
-        CONFIG.briefing.forEach(([title, text], index) => {
-            const card = document.createElement("button");
-            card.className = "card";
-            card.type = "button";
-            card.innerHTML = `<span class="tag">SCAN ${index + 1}</span><h3>${title}</h3><p>${text}</p>`;
-            card.addEventListener("click", () => {
-                seen.add(index);
-                card.style.borderColor = "rgba(255,209,102,.9)";
-                document.getElementById("bar").style.setProperty("--value", `${seen.size / CONFIG.briefing.length * 100}%`);
-                document.getElementById("notice").textContent = seen.size === 3 ? "身份扫描完成。结论：你确实很适合继续查下去。" : `已扫描 ${seen.size}/3 项。`;
-                document.getElementById("next").classList.toggle("hidden", seen.size !== 3);
+        document.addEventListener("DOMContentLoaded", () => {
+            document.getElementById("target").textContent = CONFIG.targetAlias;
+            document.getElementById("clearance").textContent = CONFIG.clearanceLabel;
+            document.getElementById("instruction").textContent = CONFIG.instruction;
+
+            const questions = CONFIG.questions;
+            const assistant = (CONFIG.narrative && CONFIG.narrative.assistant)
+                || (DOSSIER_CONFIG.narrative && DOSSIER_CONFIG.narrative.assistant)
+                || {};
+            let currentQuestion = 0;
+            let answered = new Set();
+            let totalErrors = 0;
+            const totalCards = CONFIG.briefing.length;
+
+            const questionText = document.getElementById("questionText");
+            const questionOptions = document.getElementById("questionOptions");
+            const questionNotice = document.getElementById("questionNotice");
+            const cardsContainer = document.getElementById("cards");
+            const progressPanel = document.getElementById("progressPanel");
+            const progressBar = document.getElementById("bar");
+            const progressNotice = document.getElementById("notice");
+
+            // 渲染档案卡（初始隐藏）
+            CONFIG.briefing.forEach(([title, text], index) => {
+                const card = document.createElement("div");
+                card.className = "card";
+                card.id = `card-${index}`;
+                card.style.opacity = "0.3";
+                card.style.filter = "blur(4px)";
+                card.style.transition = "all 0.6s ease";
+                card.innerHTML = `
+                    <span class="tag">档案 ${index + 1}</span>
+                    <h3>${title}</h3>
+                    <p>${text}</p>
+                `;
+                cardsContainer.appendChild(card);
             });
-            cards.appendChild(card);
+
+            function unlockCard(index) {
+                const card = document.getElementById(`card-${index}`);
+                if (card) {
+                    card.style.opacity = "1";
+                    card.style.filter = "none";
+                    card.style.borderColor = "rgba(255,209,102,0.6)";
+                }
+            }
+
+            function updateProgress() {
+                const pct = answered.size / totalCards * 100;
+                progressBar.style.setProperty("--value", `${pct}%`);
+                document.querySelector(".progress").setAttribute("aria-valuenow", Math.round(pct));
+                if (answered.size === totalCards) {
+                    progressNotice.textContent = CONFIG.completeNotice;
+                    document.getElementById("next").classList.remove("hidden");
+                } else {
+                    progressNotice.textContent = CONFIG.progressNotice.replace("{done}", String(answered.size));
+                }
+            }
+
+            function showQuestion(index) {
+                if (index >= questions.length) {
+                    // 全部问答完成
+                    document.getElementById("questionPanel").style.display = "none";
+                    cardsContainer.style.display = "grid";
+                    progressPanel.style.display = "block";
+                    updateProgress();
+                    return;
+                }
+
+                const q = questions[index];
+                questionText.textContent = `第 ${index + 1} 题：${q.question}`;
+                questionOptions.innerHTML = "";
+                questionNotice.textContent = "";
+                questionNotice.className = "notice";
+                delete questionNotice.dataset.retries;
+
+                q.options.forEach((opt, oi) => {
+                    const btn = document.createElement("button");
+                    btn.className = "btn";
+                    btn.style.textAlign = "left";
+                    btn.style.width = "100%";
+                    btn.textContent = `${String.fromCharCode(65 + oi)}. ${opt}`;
+                    btn.addEventListener("click", () => checkAnswer(index, oi, btn));
+                    questionOptions.appendChild(btn);
+                });
+            }
+
+            function checkAnswer(qIndex, selected, btn) {
+                const q = questions[qIndex];
+                const buttons = questionOptions.querySelectorAll(".btn");
+                buttons.forEach(b => b.disabled = true);
+
+                if (selected === q.answer) {
+                    // 答对
+                    btn.style.borderColor = "var(--cyan)";
+                    btn.style.background = "rgba(24,255,214,0.12)";
+                    btn.textContent += " ✓";
+
+                    // AI助手反馈
+                    const comments = assistant.correct || ["回答正确。"];
+                    const comment = comments[qIndex % comments.length];
+                    questionNotice.textContent = `${CONFIG.correctNotice} ${comment}`;
+                    questionNotice.className = "notice success";
+
+                    // 解锁档案卡
+                    setTimeout(() => {
+                        answered.add(qIndex);
+                        unlockCard(qIndex);
+                        if (window.DossierAudio) window.DossierAudio.correct();
+                        showQuestion(qIndex + 1);
+                    }, 1500);
+                } else {
+                    // 答错
+                    totalErrors++;
+                    if (window.DossierStats) DossierStats.recordError();
+                    if (window.DossierAudio) window.DossierAudio.wrong();
+
+                    btn.style.borderColor = "var(--red)";
+                    btn.style.background = "rgba(255,77,94,0.1)";
+                    btn.textContent += " ✗";
+
+                    const correctBtn = buttons[q.answer];
+                    correctBtn.style.borderColor = "var(--cyan)";
+                    correctBtn.textContent += " ✓";
+
+                    const retries = (parseInt(questionNotice.dataset.retries) || 0) + 1;
+                    questionNotice.dataset.retries = retries;
+
+                    // AI助手反馈
+                    const wrongComments = assistant.wrong || ["回答错误。"];
+                    const wrongComment = wrongComments[Math.min(qIndex, wrongComments.length - 1)];
+
+                    // 错误选项抖动
+                    btn.classList.add("option-shake");
+
+                    if (retries >= 3) {
+                        questionNotice.textContent = `${CONFIG.wrongFinalNotice} ${wrongComment}`;
+                        questionNotice.className = "notice";
+                        setTimeout(() => {
+                            answered.add(qIndex);
+                            unlockCard(qIndex);
+                            showQuestion(qIndex + 1);
+                        }, 2500);
+                    } else {
+                        questionNotice.textContent = `${CONFIG.wrongNotice.replace("{retries}", String(3 - retries))} ${wrongComment}`;
+                        questionNotice.className = "notice danger";
+                        setTimeout(() => {
+                            const hintP = document.createElement("p");
+                            hintP.style.color = "var(--muted)";
+                            hintP.style.fontSize = "0.82rem";
+                            hintP.style.marginTop = "8px";
+                            hintP.textContent = `💡 ${q.hint}`;
+                            questionNotice.appendChild(hintP);
+                        }, 800);
+                        setTimeout(() => showQuestion(qIndex), 3500);
+                    }
+                }
+            }
+
+            // 启动
+            document.getElementById("questionLabel").textContent = CONFIG.questionLabel;
+            showQuestion(0);
         });
     </script>
 </body>

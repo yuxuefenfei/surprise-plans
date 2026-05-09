@@ -4,89 +4,244 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#050809">
-    <title>Cyber Dossier - Reconstruction</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='none' stroke='%2318ffd6' stroke-width='3' d='M16 3 29 16 16 29 3 16Z'/%3E%3Cpath stroke='%23ffd166' stroke-width='2' d='M10 16h12'/%3E%3C/svg%3E">
+    <title>事件重构 · 赛博侦探</title>
     <link rel="stylesheet" href="../assets/dossier.css">
-    <script src="../assets/dossier-config.js"></script>
-    <script>
-        const CONFIG = {
-            ...DOSSIER_CONFIG,
-            ...DOSSIER_CONFIG.pages.reconstruction,
-            stage: 4,
-        };
-    </script>
+    <script src="../assets/dossier-config.js" defer></script>
     <script src="../assets/dossier-nav.js" defer></script>
 </head>
 <body>
     <main class="shell">
         <header class="topbar">
-            <div class="brand"><span class="brand-mark"></span><span>Event Reconstruction</span></div>
-            <div class="status">SORT BY CASE ORDER</div>
+            <div class="brand"><span class="brand-mark"></span><span>事件重构</span></div>
+            <div class="status">拖拽排序</div>
         </header>
+
         <section class="panel">
-            <p class="eyebrow">rebuild sequence</p>
-            <h1>RECONSTRUCT</h1>
-            <p>点击卡片，把事件按正确顺序送入重构队列。点错可以重置。轻解谜，不虐待调查员。</p>
+            <p class="eyebrow">时间线还原</p>
+            <h1>重构事件顺序</h1>
+            <p id="instruction"></p>
+            <p style="font-size:0.82rem;color:var(--muted);margin-top:8px;">
+                💡 提示：4个事件按时间先后排列。从「最初发生了什么」开始，到「最终承认了什么」结束。
+            </p>
+            <p id="touchHint" style="font-size:0.78rem;color:var(--yellow);margin-top:4px;display:none;">
+                📱 触摸模式：先点击卡片选中（黄色高亮），再点击时间线槽位放置。
+            </p>
         </section>
-        <section class="grid" id="pool"></section>
+
+        <section class="panel timeline-section">
+            <h2>时间线</h2>
+            <div class="timeline-track" id="timeline">
+                <div class="timeline-slot" data-step="1" data-position="0" role="button" tabindex="0" aria-label="时间线位置 1，拖拽事件卡片到此处"></div>
+                <div class="timeline-slot" data-step="2" data-position="1" role="button" tabindex="0" aria-label="时间线位置 2，拖拽事件卡片到此处"></div>
+                <div class="timeline-slot" data-step="3" data-position="2" role="button" tabindex="0" aria-label="时间线位置 3，拖拽事件卡片到此处"></div>
+                <div class="timeline-slot" data-step="4" data-position="3" role="button" tabindex="0" aria-label="时间线位置 4，拖拽事件卡片到此处"></div>
+            </div>
+        </section>
+
+        <!-- 终端反馈 -->
+        <aside class="terminal" id="reconTerminal" aria-live="polite" style="min-height:3em;">
+            <div class="terminal-header">
+                <span class="terminal-title">TIMELINE SYNC</span>
+                <span class="terminal-dots"><span></span><span></span><span></span></span>
+            </div>
+        </aside>
+
         <section class="panel">
-            <h2>重构队列</h2>
-            <div class="grid" id="queue"></div>
-            <p class="notice" id="notice">等待选择第 1 个事件。</p>
+            <h2>事件池</h2>
+            <div class="grid event-pool" id="pool"></div>
+            <p class="notice" id="notice" aria-live="polite"></p>
             <div class="btn-row">
                 <button class="btn secondary" id="reset" type="button">重置队列</button>
                 <a class="btn hidden" id="next" href="./05-verdict.html">生成结案报告</a>
             </div>
         </section>
+
         <nav class="nav">
             <a class="btn secondary" href="./03-intercept.html">返回信号页</a>
         </nav>
     </main>
     <script>
-        const pool = document.getElementById("pool");
-        const queue = document.getElementById("queue");
-        const notice = document.getElementById("notice");
-        const picked = [];
-        function renderPool() {
-            pool.innerHTML = "";
-            Object.entries(CONFIG.scenes).forEach(([key, [num, title, text]]) => {
-                if (picked.includes(key)) return;
-                const card = document.createElement("button");
-                card.className = "card";
-                card.type = "button";
-                card.innerHTML = `<span class="tag">EVENT ${num}</span><h3>${title}</h3><p>${text}</p>`;
-                card.addEventListener("click", () => pick(key));
-                pool.appendChild(card);
-            });
-        }
-        function renderQueue() {
-            queue.innerHTML = picked.map(key => {
-                const [num, title] = CONFIG.scenes[key];
-                return `<div class="card"><span class="tag">${num}</span><h3>${title}</h3><p>已进入重构队列。</p></div>`;
-            }).join("");
-        }
-        function pick(key) {
-            const expected = CONFIG.correctOrder[picked.length];
-            if (key !== expected) {
-                notice.textContent = "顺序异常。系统建议从最早观察开始，不要跳到自我暴露。";
-                notice.className = "notice danger";
-                return;
+        document.addEventListener("DOMContentLoaded", () => {
+            document.getElementById("instruction").textContent = CONFIG.instruction;
+            document.getElementById("notice").textContent = CONFIG.initialNotice;
+
+            const pool = document.getElementById("pool");
+            const slots = document.querySelectorAll(".timeline-slot");
+            const notice = document.getElementById("notice");
+            const reconTerm = document.getElementById("reconTerminal");
+
+            function appendReconFeedback(text, type) {
+                if (!reconTerm) return;
+                const span = document.createElement("span");
+                span.className = "terminal-line" + (type === "error" ? " error" : type === "success" ? " warn" : "");
+                span.textContent = "> " + text;
+                reconTerm.appendChild(span);
             }
-            picked.push(key);
-            notice.className = "notice";
-            notice.textContent = picked.length === CONFIG.correctOrder.length ? "事件重构完成。结论已经无法撤回。" : `正确。继续选择第 ${picked.length + 1} 个事件。`;
-            document.getElementById("next").classList.toggle("hidden", picked.length !== CONFIG.correctOrder.length);
-            renderPool();
-            renderQueue();
-        }
-        document.getElementById("reset").addEventListener("click", () => {
-            picked.length = 0;
-            notice.className = "notice";
-            notice.textContent = "队列已重置。冷静很好，重新来过也很好。";
-            document.getElementById("next").classList.add("hidden");
-            renderPool();
-            renderQueue();
+            const scenes = CONFIG.scenes;
+            const correctOrder = CONFIG.correctOrder;
+            const maxErrors = CONFIG.maxErrors || 5;
+            let errorCount = 0;
+            let hintShown = false;
+
+            const isTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+            let touchSelectedKey = null;
+
+            // 触摸设备显示操作提示
+            if (isTouch) {
+                const hint = document.getElementById("touchHint");
+                if (hint) hint.style.display = "block";
+            }
+
+            function renderEventCards() {
+                pool.innerHTML = "";
+                const sceneKeys = Object.keys(scenes);
+                sceneKeys.sort(() => Math.random() - 0.5);
+
+                sceneKeys.forEach(key => {
+                    const [num, title, text] = scenes[key];
+                    const card = document.createElement("button");
+                    card.className = "card event-card";
+                    card.type = "button";
+                    card.dataset.key = key;
+                    card.draggable = true;
+                    card.setAttribute("aria-label", `事件 ${num}：${title}。${text}`);
+                    card.innerHTML = `<span class="tag">事件 ${num}</span><h3>${title}</h3><p>${text}</p>`;
+
+                    card.addEventListener("dragstart", e => {
+                        if (isTouch) { e.preventDefault(); return; }
+                        card.classList.add("dragging");
+                        e.dataTransfer.setData("text/plain", key);
+                    });
+                    card.addEventListener("dragend", () => card.classList.remove("dragging"));
+
+                    card.addEventListener("click", () => {
+                        if (isTouch) {
+                            if (touchSelectedKey === key) {
+                                card.classList.remove("touch-selected");
+                                touchSelectedKey = null;
+                            } else {
+                                document.querySelectorAll(".event-card").forEach(c => c.classList.remove("touch-selected"));
+                                card.classList.add("touch-selected");
+                                touchSelectedKey = key;
+                            }
+                        }
+                    });
+
+                    // 键盘支持：Enter选中，然后Tab到槽位Enter放置
+                    card.addEventListener("keydown", (e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            if (touchSelectedKey === key) {
+                                card.classList.remove("touch-selected");
+                                touchSelectedKey = null;
+                            } else {
+                                document.querySelectorAll(".event-card").forEach(c => c.classList.remove("touch-selected"));
+                                card.classList.add("touch-selected");
+                                touchSelectedKey = key;
+                                notice.textContent = `已选中「${title}」，按 Tab 切换到时间线槽位，按 Enter 放置。`;
+                            }
+                        }
+                    });
+
+                    pool.appendChild(card);
+                });
+            }
+
+            renderEventCards();
+
+            slots.forEach(slot => {
+                slot.addEventListener("dragover", e => { e.preventDefault(); slot.classList.add("drag-over"); });
+                slot.addEventListener("dragleave", () => slot.classList.remove("drag-over"));
+                slot.addEventListener("drop", e => {
+                    e.preventDefault();
+                    slot.classList.remove("drag-over");
+                    const key = e.dataTransfer.getData("text/plain");
+                    if (key) tryPlace(key, slot);
+                });
+
+                slot.addEventListener("click", () => {
+                    if (isTouch && touchSelectedKey) tryPlace(touchSelectedKey, slot);
+                });
+
+                slot.addEventListener("keydown", (e) => {
+                    if ((e.key === "Enter" || e.key === " ") && touchSelectedKey) {
+                        e.preventDefault();
+                        tryPlace(touchSelectedKey, slot);
+                    }
+                });
+            });
+
+            function tryPlace(key, slot) {
+                const position = parseInt(slot.dataset.position);
+                const expected = correctOrder[position];
+
+                if (key === expected) {
+                    slot.classList.add("is-correct");
+                    const [num, title, text] = scenes[key];
+                    slot.innerHTML = `<span class="tag" style="font-size:0.65rem">第 ${position + 1} 步</span><div class="card" style="min-height:auto;padding:10px;font-size:0.85rem;width:100%"><span class="tag">事件 ${num}</span><h3 style="font-size:0.95rem">${title}</h3><p style="font-size:0.78rem">${text}</p></div>`;
+
+                    const card = pool.querySelector(`[data-key="${key}"]`);
+                    if (card) card.remove();
+
+                    if (touchSelectedKey === key) {
+                        touchSelectedKey = null;
+                        document.querySelectorAll(".event-card").forEach(c => c.classList.remove("touch-selected"));
+                    }
+
+                    if (window.DossierAudio) window.DossierAudio.correct();
+                    appendReconFeedback(`第 ${position + 1} 步时序确认：${title}`, "success");
+
+                    notice.className = "notice";
+                    notice.textContent = CONFIG.progressNotice.replace("{step}", String(position + 1));
+
+                    const filled = document.querySelectorAll(".timeline-slot.is-correct").length;
+                    if (filled === correctOrder.length) {
+                        notice.textContent = CONFIG.completeNotice;
+                        document.getElementById("next").classList.remove("hidden");
+                    }
+                } else {
+                    errorCount++;
+                    if (window.DossierStats) DossierStats.recordError();
+                    if (window.DossierAudio) window.DossierAudio.wrong();
+
+                    slot.classList.add("is-wrong");
+                    setTimeout(() => slot.classList.remove("is-wrong"), 500);
+                    appendReconFeedback(`时序冲突：${scenes[key][1]} 不在这个位置。`, "error");
+                    notice.textContent = CONFIG.errorNotice;
+                    notice.className = "notice danger";
+
+                    if (isTouch) {
+                        document.querySelectorAll(".event-card").forEach(c => c.classList.remove("touch-selected"));
+                        touchSelectedKey = null;
+                    }
+
+                    if (errorCount >= maxErrors && !hintShown) {
+                        hintShown = true;
+                        setTimeout(() => {
+                            notice.innerHTML += `<br><span style="color:var(--yellow);font-size:0.78rem">💡 ${CONFIG.hintNotice}</span>`;
+                        }, 600);
+                    }
+                }
+            }
+
+            function resetBoard() {
+                errorCount = 0;
+                hintShown = false;
+                touchSelectedKey = null;
+                slots.forEach(slot => {
+                    slot.classList.remove("is-correct", "is-wrong", "drag-over");
+                    slot.innerHTML = "";
+                });
+                reconTerm.querySelectorAll(".terminal-line, .easter-egg-reveal").forEach(line => line.remove());
+                document.getElementById("next").classList.add("hidden");
+                notice.className = "notice";
+                notice.textContent = CONFIG.resetNotice || CONFIG.initialNotice;
+                renderEventCards();
+            }
+
+            document.getElementById("reset").addEventListener("click", resetBoard);
         });
-        renderPool();
     </script>
 </body>
 </html>

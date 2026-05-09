@@ -4,64 +4,282 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#050809">
-    <title>Cyber Dossier - Signal Intercept</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='none' stroke='%2318ffd6' stroke-width='3' d='M16 3 29 16 16 29 3 16Z'/%3E%3Cpath stroke='%23ffd166' stroke-width='2' d='M10 16h12'/%3E%3C/svg%3E">
+    <title>信号截获 · 赛博侦探</title>
     <link rel="stylesheet" href="../assets/dossier.css">
-    <script src="../assets/dossier-config.js"></script>
-    <script>
-        const CONFIG = {
-            ...DOSSIER_CONFIG,
-            ...DOSSIER_CONFIG.pages.intercept,
-            stage: 3,
-        };
-    </script>
+    <script src="../assets/dossier-config.js" defer></script>
     <script src="../assets/dossier-nav.js" defer></script>
 </head>
 <body>
     <main class="shell">
         <header class="topbar">
-            <div class="brand"><span class="brand-mark"></span><span>Signal Intercept</span></div>
-            <div class="status">SHORT CODE REQUIRED</div>
+            <div class="brand"><span class="brand-mark"></span><span>信号截获</span></div>
+            <div class="status">需要破译序列</div>
         </header>
+
         <section class="hero">
             <div class="panel">
-                <p class="eyebrow">encrypted packet</p>
-                <h1>DECODE</h1>
-                <p>监听器抓到一段短包。输入短码即可破译。系统友情提示：答案不区分大小写。</p>
-                <input class="code-input" id="code" autocomplete="off" placeholder="输入 TRACE">
+                <p class="eyebrow">加密信号包</p>
+                <h1>信号破译</h1>
+                <p id="instruction"></p>
+
+                <div class="code-segments" id="codeSegments"></div>
+                <div class="signal-nodes" id="signalNodes"></div>
+
                 <div class="btn-row">
-                    <button class="btn" id="decode" type="button">执行破译</button>
-                    <button class="btn secondary" id="hint" type="button">显示提示</button>
+                    <button class="btn" id="decode" type="button" disabled>执行破译</button>
+                    <button class="btn secondary" id="hintBtn" type="button">显示提示</button>
                 </div>
-                <p class="notice" id="notice"></p>
+                <p class="notice" id="notice" aria-live="polite"></p>
             </div>
-            <aside class="terminal" id="packet">
-                <span class="terminal-line">> packet hash: 7A-1F-CC-09</span>
-                <span class="terminal-line">> payload: #### ## #######</span>
-                <span class="terminal-line warn">> human factor detected</span>
-                <span class="terminal-line">> waiting for short code...</span>
-            </aside>
+            <aside class="terminal" id="packet" aria-live="polite"></aside>
         </section>
+
         <nav class="nav">
             <a class="btn secondary" href="./02-evidence.html">返回证据墙</a>
             <a class="btn hidden" id="next" href="./04-reconstruction.html">重构事件</a>
         </nav>
     </main>
     <script>
-        const input = document.getElementById("code");
-        const notice = document.getElementById("notice");
-        document.getElementById("hint").addEventListener("click", () => notice.textContent = CONFIG.hint);
-        document.getElementById("decode").addEventListener("click", () => {
-            if (input.value.trim().toUpperCase() !== CONFIG.passcode) {
-                notice.textContent = "短码不匹配。系统没有生气，只是很冷静地拒绝了。";
-                notice.className = "notice danger";
-                return;
+        document.addEventListener("DOMContentLoaded", () => {
+            document.getElementById("instruction").textContent = CONFIG.instruction;
+
+            const packet = document.getElementById("packet");
+            // 终端标题
+            const hdr = document.createElement("div");
+            hdr.className = "terminal-header";
+            hdr.innerHTML = `<span class="terminal-title">SIGNAL INTERCEPT</span><span class="terminal-dots"><span></span><span></span><span></span></span>`;
+            packet.appendChild(hdr);
+            CONFIG.packetLines.forEach((line, index) => {
+                const span = document.createElement("span");
+                span.className = line.className;
+                span.textContent = line.text;
+                span.style.animationDelay = `${index * 0.3}s`;
+                packet.appendChild(span);
+            });
+
+            const segments = CONFIG.segments;
+            const codeSegmentsEl = document.getElementById("codeSegments");
+            const segmentChars = new Array(segments.length).fill("");
+            const segmentEls = [];
+
+            segments.forEach((seg, i) => {
+                const el = document.createElement("div");
+                el.className = "code-segment";
+                el.id = `seg-${i}`;
+                el.textContent = "？";
+                codeSegmentsEl.appendChild(el);
+                segmentEls.push(el);
+            });
+
+            function updateSegment(index) {
+                const el = segmentEls[index];
+                const seg = segments[index];
+                segmentChars[index] = seg.chars;
+                el.textContent = seg.chars;
+                el.classList.add("filled");
+                appendTerminal(`> 第 ${index + 1} 段破译完成：${seg.chars}`);
+                if (window.DossierAudio) window.DossierAudio.unlock();
+                checkAllSegments();
             }
-            notice.textContent = "破译完成。建议不要在终端前微笑，摄像头可能会记录。";
-            notice.className = "notice success";
-            document.getElementById("packet").innerHTML = `<span class="terminal-line warn">> decrypt success</span><span class="terminal-line">${CONFIG.decoded}</span>`;
-            document.getElementById("next").classList.remove("hidden");
+
+            function checkAllSegments() {
+                const allFilled = segmentChars.every(c => c.length > 0);
+                document.getElementById("decode").disabled = !allFilled;
+                if (allFilled) {
+                    document.getElementById("notice").textContent = "全部密码段已破译，点击「执行破译」完成解锁。";
+                    document.getElementById("notice").className = "notice success";
+                    // 心跳效果
+                    document.body.classList.add("heartbeat");
+                    if (window.DossierAudio) window.DossierAudio.heartbeat();
+                    setTimeout(() => document.body.classList.remove("heartbeat"), 1000);
+                }
+            }
+
+            function appendTerminal(text) {
+                const span = document.createElement("span");
+                span.className = "terminal-line";
+                span.textContent = text;
+                packet.appendChild(span);
+            }
+
+            // 渲染信号节点
+            const nodesEl = document.getElementById("signalNodes");
+            segments.forEach((seg, i) => {
+                const node = document.createElement("div");
+                node.className = "signal-node";
+                node.id = `node-${i}`;
+
+                let innerHTML = `<div class="signal-node-label">${seg.label}</div>`;
+
+                if (seg.type === "sequence") {
+                    innerHTML += `<div class="signal-node-status" id="node-status-${i}">${seg.hint}</div>`;
+                    innerHTML += `<div class="freq-buttons" id="freq-btns-${i}" role="group" aria-label="${seg.label}">`;
+                    seg.buttons.forEach((label, bi) => {
+                        innerHTML += `<button class="freq-btn" type="button" data-index="${bi}" aria-label="${label}">${label}</button>`;
+                    });
+                    innerHTML += `</div>`;
+                } else if (seg.type === "tap") {
+                    innerHTML += `<div class="signal-node-status" id="node-status-${i}">${seg.hint}</div>`;
+                    innerHTML += `<div class="signal-lock-area" id="lock-area-${i}" role="button" aria-label="信号锁定区域，点击闪烁的信号点"></div>`;
+                }
+
+                node.innerHTML = innerHTML;
+                nodesEl.appendChild(node);
+            });
+
+            // === 节点1: 频率校准 ===
+            (function initSequence() {
+                const seg = segments[0];
+                const node = document.getElementById("node-0");
+                let clickOrder = [];
+                let isDone = false;
+
+                const btns = document.querySelectorAll(`#freq-btns-0 .freq-btn`);
+                btns.forEach(btn => {
+                    btn.addEventListener("click", () => {
+                        if (isDone) return;
+                        const bi = parseInt(btn.dataset.index);
+                        if (btn.classList.contains("is-used")) return;
+
+                        if (window.DossierAudio) window.DossierAudio.playTone(300 + bi * 150, "sine", 0.08, 0.04);
+
+                        clickOrder.push(bi);
+                        const expectedIndex = clickOrder.length - 1;
+                        const expected = seg.answer[expectedIndex];
+
+                        if (bi === expected) {
+                            btn.classList.add("is-correct");
+                            btn.classList.add("is-used");
+                            if (clickOrder.length === seg.answer.length) {
+                                isDone = true;
+                                node.classList.add("is-done");
+                                node.querySelector(".signal-node-status").textContent = "✓ 频率校准完成";
+                                appendTerminal("> 第一段信号已校准");
+                                updateSegment(0);
+                            }
+                        } else {
+                            btn.classList.add("is-wrong");
+                            if (window.DossierAudio) window.DossierAudio.wrong();
+                            if (window.DossierStats) DossierStats.recordError();
+                            appendTerminal("> 频率不匹配，重新校准");
+                            setTimeout(() => {
+                                btn.classList.remove("is-wrong");
+                                btns.forEach(b => {
+                                    b.classList.remove("is-correct");
+                                    b.classList.remove("is-used");
+                                });
+                                clickOrder = [];
+                            }, 500);
+                        }
+                    });
+                });
+            })();
+
+            // === 节点2: 信号锁定 ===
+            (function initTap() {
+                const seg = segments[1];
+                const node = document.getElementById("node-1");
+                const area = document.getElementById("lock-area-1");
+                let locked = 0;
+                let isDone = false;
+                let dotTimeout;
+
+                function spawnDot() {
+                    if (isDone) return;
+                    const dot = document.createElement("div");
+                    dot.className = "signal-dot";
+                    dot.setAttribute("role", "button");
+                    dot.setAttribute("tabindex", "0");
+                    dot.setAttribute("aria-label", "信号点，点击锁定");
+                    const x = 10 + Math.random() * 60;
+                    const y = 10 + Math.random() * 50;
+                    dot.style.left = `${x}%`;
+                    dot.style.top = `${y}%`;
+
+                    function lockDot() {
+                        if (isDone) return;
+                        dot.classList.add("locked");
+                        dot.style.background = "var(--yellow)";
+                        locked++;
+                        document.getElementById("node-status-1").textContent = `已回应 ${locked}/${seg.targetTaps} 次`;
+                        if (window.DossierAudio) window.DossierAudio.heartbeat();
+
+                        if (locked >= seg.targetTaps) {
+                            isDone = true;
+                            node.classList.add("is-done");
+                            document.getElementById("node-status-1").textContent = "✓ 信号锁定完成";
+                            appendTerminal("> 第二段信号已锁定");
+                            updateSegment(1);
+                            if (dotTimeout) clearTimeout(dotTimeout);
+                            clearInterval(interval);
+                        } else {
+                            dot.style.pointerEvents = "none";
+                            dot.removeAttribute("tabindex");
+                        }
+                    }
+
+                    dot.addEventListener("click", lockDot);
+                    dot.addEventListener("keydown", (e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            lockDot();
+                        }
+                    });
+
+                    area.appendChild(dot);
+
+                    dotTimeout = setTimeout(() => {
+                        if (!dot.classList.contains("locked") && area.contains(dot)) {
+                            dot.remove();
+                        }
+                    }, 5000);
+                }
+
+                spawnDot();
+                const interval = setInterval(() => {
+                    if (isDone) { clearInterval(interval); return; }
+                    area.querySelectorAll(".signal-dot:not(.locked)").forEach(d => d.remove());
+                    spawnDot();
+                }, 2500);
+
+                // 页面卸载时清理 interval（防止内存泄漏）
+                window.addEventListener("pagehide", () => clearInterval(interval));
+                window.addEventListener("beforeunload", () => clearInterval(interval));
+            })();
+
+            // 提示按钮
+            const hintBtn = document.getElementById("hintBtn");
+            let hintShown = false;
+            hintBtn.addEventListener("click", () => {
+                document.getElementById("notice").textContent = CONFIG.hint;
+                document.getElementById("notice").className = "notice";
+                appendTerminal(`> ${CONFIG.hint}`);
+                if (!hintShown) {
+                    hintShown = true;
+                    hintBtn.textContent = "提示已显示";
+                }
+            });
+
+            // 最终破译
+            document.getElementById("decode").addEventListener("click", () => {
+                const fullCode = segmentChars.join("");
+                if (fullCode !== CONFIG.passcode) {
+                    document.getElementById("notice").textContent = CONFIG.failNotice;
+                    document.getElementById("notice").className = "notice danger";
+                    if (window.DossierAudio) window.DossierAudio.wrong();
+                    return;
+                }
+                document.getElementById("notice").textContent = CONFIG.successNotice;
+                document.getElementById("notice").className = "notice success";
+                if (window.DossierAudio) window.DossierAudio.unlock();
+                // 故障效果
+                document.body.classList.add("glitch");
+                setTimeout(() => document.body.classList.remove("glitch"), 1000);
+                packet.innerHTML = `<span class="terminal-line warn" style="animation-delay:0s">> 破译成功</span><span class="terminal-line" style="animation-delay:0.3s">${CONFIG.decoded}</span>`;
+                document.getElementById("next").classList.remove("hidden");
+            });
         });
-        input.addEventListener("keydown", e => { if (e.key === "Enter") document.getElementById("decode").click(); });
     </script>
 </body>
 </html>
