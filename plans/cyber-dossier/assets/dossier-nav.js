@@ -75,7 +75,12 @@
     rail.setAttribute("aria-label", "案件进度");
     rail.innerHTML = steps.map(([num, label, href], index) => {
         const state = index === current ? "is-active" : index <= reached ? "is-done" : "";
-        return `<a class="case-step ${state}" href="./${href}"><span class="sr-only">步骤 ${num}：${label}${index === current ? "，当前" : index <= reached ? "，已完成" : "，未解锁"}</span><span aria-hidden="true">${num} ${label}</span></a>`;
+        const status = index === current ? "，当前" : index <= reached ? "，已完成" : "，未解锁";
+        const content = `<span class="sr-only">步骤 ${num}：${label}${status}</span><span aria-hidden="true">${num} ${label}</span>`;
+        if (index <= reached) {
+            return `<a class="case-step ${state}" href="./${href}">${content}</a>`;
+        }
+        return `<span class="case-step is-locked" aria-disabled="true">${content}</span>`;
     }).join("");
 
     const topbar = document.querySelector(".topbar");

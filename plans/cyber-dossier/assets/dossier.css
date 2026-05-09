@@ -133,6 +133,11 @@ a { color: inherit; }
     text-transform: uppercase;
 }
 
+.case-step.is-locked {
+    cursor: not-allowed;
+    opacity: 0.56;
+}
+
 .case-step.is-done {
     border-color: rgba(24, 255, 214, 0.52);
     color: var(--cyan);
