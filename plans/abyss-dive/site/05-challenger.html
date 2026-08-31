@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#01040a">
+    <title>深海记忆潜航 · 挑战者深渊 (10,928m)</title>
+    <link rel="stylesheet" href="../assets/dive.css">
+    <style>
+        .final-actions {
+            display: flex;
+            gap: 14px;
+            justify-content: center;
+            margin-top: 26px;
+            flex-wrap: wrap;
+        }
+        .egg-counter-badge {
+            display: inline-block;
+            margin-top: 14px;
+            padding: 5px 14px;
+            border-radius: var(--radius-pill);
+            background: rgba(255, 183, 3, 0.12);
+            border: 1px solid rgba(255, 183, 3, 0.4);
+            color: var(--c-warn);
+            font-family: var(--font-mono);
+            font-size: 0.84rem;
+            transition: all 0.3s ease;
+        }
+        .verdict-p {
+            margin-bottom: 14px;
+            text-indent: 2em;
+        }
+    </style>
+</head>
+<body>
+    <main class="main-stage">
+        <span class="stage-badge" style="border-color: var(--c-accent);">STAGE 05 // CHALLENGER DEEP 10,928M</span>
+        <h1 class="stage-title" id="headlineText">挑战者深渊 · 给你的万米真言</h1>
+        <p class="stage-desc" id="instructionText"></p>
+
+        <div class="searchlight-chamber">
+            <div class="searchlight-beam" id="searchlightBeam"></div>
+            
+            <button class="btn-primary" id="igniteLampBtn">
+                <span id="lampBtnText">启动万米主探照灯 (Ignite Searchlight)</span>
+            </button>
+
+            <div class="deep-verdict-card" id="verdictCard">
+                <span class="stage-badge" style="border-color: var(--c-accent); margin-bottom: 14px;">马里亚纳深渊科考 · 最终结案报告</span>
+                <div id="verdictBody" style="line-height: 2.1; margin: 16px 0; font-size: 1.02rem; color: #f0f6fc;"></div>
+                <div style="font-size: 0.88rem; color: var(--c-warn); line-height: 1.6;" id="deepScanHintText"></div>
+                <div class="egg-counter-badge" id="eggCounter">已发现 0/4 条深海真心话</div>
+            </div>
+        </div>
+
+        <div class="sub-terminal" id="terminalBox" aria-live="polite">
+            <div class="terminal-line success">> 深潜器已平稳降落于马里亚纳海沟挑战者深渊底床 (10,928.0m)</div>
+        </div>
+
+        <div class="final-actions" id="finalActions" style="display: none;">
+            <a class="btn-secondary" href="./index.html">重新下潜航行 (Replay Dive)</a>
+        </div>
+    </main>
+
+    <!-- 真心话彩蛋模态窗 -->
+    <div class="egg-modal" id="eggModal">
+        <div class="egg-box">
+            <span class="stage-badge" id="eggModalTitle" style="border-color: var(--c-warn); color: var(--c-warn);">海底真心话彩蛋</span>
+            <p id="eggRevealText" style="color: #fff; font-size: 1.05rem; line-height: 1.9; margin: 16px 0 22px; text-align: left; white-space: pre-line;"></p>
+            <button class="btn-primary" id="eggModalCloseBtn">收起此段真心话</button>
+        </div>
+    </div>
+
+    <script src="../assets/dive-config.js"></script>
+    <script src="../assets/dive-nav.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const pageData = DIVE_CONFIG.pages.challenger;
+            document.getElementById("headlineText").textContent = pageData.headline;
+            document.getElementById("instructionText").textContent = pageData.instruction;
+
+            const igniteBtn = document.getElementById("igniteLampBtn");
+            const lampBtnText = document.getElementById("lampBtnText");
+            const beam = document.getElementById("searchlightBeam");
+            const verdictCard = document.getElementById("verdictCard");
+            const verdictBody = document.getElementById("verdictBody");
+            const deepScanHint = document.getElementById("deepScanHintText");
+            const eggCounter = document.getElementById("eggCounter");
+            const term = document.getElementById("terminalBox");
+            const finalActions = document.getElementById("finalActions");
+
+            const eggModal = document.getElementById("eggModal");
+            const eggModalTitle = document.getElementById("eggModalTitle");
+            const eggRevealText = document.getElementById("eggRevealText");
+            const eggModalCloseBtn = document.getElementById("eggModalCloseBtn");
+
+            const eggs = pageData.easterEggs;
+            const foundSet = new Set();
+
+            igniteBtn.addEventListener("click", () => {
+                igniteBtn.disabled = true;
+                lampBtnText.textContent = pageData.illuminatingText;
+                if (window.DiveAudio) DiveAudio.searchlightIgnite();
+                beam.classList.add("is-lit");
+
+                window.logTerminal(term, "万米超高亮主探照灯充能聚光中... 正在照亮海床", "warn");
+
+                setTimeout(() => {
+                    igniteBtn.style.display = "none";
+                    verdictCard.classList.add("is-visible");
+                    finalActions.style.display = "flex";
+
+                    if (window.DiveAudio) DiveAudio.sonarUnlock();
+
+                    // 构建报告文本并嵌入彩蛋触发词
+                    let rawHtml = pageData.verdictLines.map(line => `<p class="verdict-p">${line}</p>`).join("");
+                    eggs.forEach(egg => {
+                        rawHtml = rawHtml.replaceAll(egg.word, `<span class="egg-trigger" data-word="${egg.word}" role="button" tabindex="0" title="点击解锁隐藏真心话">${egg.word}</span>`);
+                    });
+
+                    verdictBody.innerHTML = rawHtml;
+                    deepScanHint.textContent = pageData.deepScanHint;
+
+                    // 绑定关键词点击
+                    document.querySelectorAll(".egg-trigger").forEach(el => {
+                        const triggerWord = el.dataset.word;
+                        el.addEventListener("click", () => {
+                            const match = eggs.find(e => e.word === triggerWord);
+                            if (match) {
+                                if (window.DiveAudio) DiveAudio.harmonicChime(659);
+                                eggModalTitle.textContent = match.title || "深海真心话";
+                                eggRevealText.textContent = match.reveal;
+                                eggModal.classList.add("is-open");
+
+                                foundSet.add(triggerWord);
+                                eggCounter.textContent = pageData.eggsFoundNotice
+                                    .replace("{found}", foundSet.size)
+                                    .replace("{total}", eggs.length);
+
+                                if (foundSet.size === eggs.length) {
+                                    eggCounter.style.borderColor = "var(--c-accent)";
+                                    eggCounter.style.color = "var(--c-accent)";
+                                    eggCounter.textContent = pageData.allEggsFoundNotice;
+                                    window.logTerminal(term, pageData.allEggsFoundNotice, "success");
+                                }
+                            }
+                        });
+                    });
+
+                    window.logTerminal(term, "深海结案词已打印完毕，深度扫描模式已激活。", "success");
+                }, 1300);
+            });
+
+            eggModalCloseBtn.addEventListener("click", () => {
+                eggModal.classList.remove("is-open");
+            });
+        });
+    </script>
+</body>
+</html>

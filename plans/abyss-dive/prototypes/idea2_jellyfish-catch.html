@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>原型 2：发光水母与微光记忆捕获 (200m)</title>
+    <link rel="stylesheet" href="../assets/dive.css">
+</head>
+<body>
+    <main class="main-stage">
+        <span class="stage-badge">PROTOTYPE #2 // 200M DEPTH</span>
+        <h1 class="stage-title">微光层 · 发光水母捕获</h1>
+        <p class="stage-desc">测试水下发光水母悬浮动画、点击捕捉与记忆提取弹窗交互。</p>
+
+        <div class="jellyfish-chamber" id="chamber"></div>
+
+        <div class="sub-terminal" id="terminalBox">
+            <div class="terminal-line info">> 点击舱体内游动的发光水母进行捕获</div>
+        </div>
+    </main>
+
+    <!-- 弹窗 -->
+    <div class="jelly-card-modal" id="jellyModal">
+        <div class="jelly-modal-content">
+            <span class="stage-badge" id="modalTag">微光记忆</span>
+            <h2 id="modalTitle" style="color: var(--c-accent); margin: 10px 0;"></h2>
+            <p id="modalBody" style="color: var(--c-text); line-height: 1.8; margin: 16px 0; font-size: 0.95rem;"></p>
+            <button class="btn-primary" id="modalCloseBtn">归档微光样本</button>
+        </div>
+    </div>
+
+    <script src="../assets/dive-config.js"></script>
+    <script src="../assets/dive-nav.js"></script>
+    <script>
+        const chamber = document.getElementById("chamber");
+        const modal = document.getElementById("jellyModal");
+        const modalTitle = document.getElementById("modalTitle");
+        const modalBody = document.getElementById("modalBody");
+        const modalCloseBtn = document.getElementById("modalCloseBtn");
+        const term = document.getElementById("terminalBox");
+
+        const jellies = DIVE_CONFIG.pages.twilight.jellyfish;
+        let caught = 0;
+
+        jellies.forEach((j, idx) => {
+            const el = document.createElement("div");
+            el.className = "jelly-creature";
+            el.style.left = (15 + idx * 30) + "%";
+            el.style.top = (30 + (idx % 2) * 25) + "%";
+            el.style.setProperty("--jelly-glow", j.glowColor);
+            el.innerHTML = `
+                <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+                    <path d="M12 28C12 16 20 8 32 8C44 8 52 16 52 28C52 34 46 36 40 34C36 32 34 35 32 35C30 35 28 32 24 34C18 36 12 34 12 28Z" fill="${j.glowColor}" fill-opacity="0.6" stroke="${j.glowColor}" stroke-width="2"/>
+                    <path d="M20 36V48C20 52 22 56 22 58" stroke="${j.glowColor}" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M28 36V52C28 56 30 60 30 62" stroke="${j.glowColor}" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M36 36V50C36 54 34 58 34 60" stroke="${j.glowColor}" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M44 36V46C44 50 42 54 42 56" stroke="${j.glowColor}" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            `;
+
+            el.addEventListener("click", () => {
+                if (el.classList.contains("is-caught")) return;
+                el.classList.add("is-caught");
+                caught++;
+                if (window.DiveAudio) DiveAudio.bubblePop();
+
+                modalTitle.textContent = j.title;
+                modalBody.textContent = j.excerpt;
+                modal.classList.add("is-open");
+
+                window.logTerminal(term, `捕获水母样本 [${j.title}]，已收集 (${caught}/${jellies.length})`, "success");
+            });
+
+            chamber.appendChild(el);
+        });
+
+        modalCloseBtn.addEventListener("click", () => {
+            modal.classList.remove("is-open");
+            if (caught >= jellies.length && window.DiveAudio) {
+                DiveAudio.sonarUnlock();
+                window.logTerminal(term, "所有微光水母记忆已归档！", "success");
+            }
+        });
+    </script>
+</body>
+</html>
+

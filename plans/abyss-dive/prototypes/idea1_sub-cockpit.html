@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>原型 1：深潜器注水自检 (0m)</title>
+    <link rel="stylesheet" href="../assets/dive.css">
+    <style>
+        .cockpit-view {
+            padding: 20px;
+            text-align: center;
+        }
+        .flood-gauge {
+            width: 100%;
+            height: 16px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--c-accent);
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 16px 0;
+        }
+        .flood-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #00f5d4, #38ef7d);
+            transition: width 0.1s linear;
+        }
+    </style>
+</head>
+<body>
+    <main class="main-stage">
+        <span class="stage-badge">PROTOTYPE #1 // 0M DEPTH</span>
+        <h1 class="stage-title">深潜器注水与密封自检</h1>
+        <p class="stage-desc">测试压载水注入、系统自检日志流与下潜触发机制。</p>
+
+        <div class="cockpit-view">
+            <div class="flood-gauge">
+                <div class="flood-bar" id="floodBar"></div>
+            </div>
+            <button class="btn-primary" id="floodBtn">开始注入压载水</button>
+            <a class="btn-primary" id="diveNextBtn" href="../site/01-twilight.html" style="display: none; margin-left: 10px;">开启下潜 →</a>
+        </div>
+
+        <div class="sub-terminal" id="terminalBox"></div>
+    </main>
+
+    <script src="../assets/dive-config.js"></script>
+    <script src="../assets/dive-nav.js"></script>
+    <script>
+        const floodBtn = document.getElementById("floodBtn");
+        const diveNextBtn = document.getElementById("diveNextBtn");
+        const floodBar = document.getElementById("floodBar");
+        const term = document.getElementById("terminalBox");
+
+        window.logTerminal(term, "系统初始化就绪... 潜艇处于海平面 0.0m", "info");
+
+        floodBtn.addEventListener("click", () => {
+            floodBtn.disabled = true;
+            floodBtn.textContent = "注水中...";
+            let p = 0;
+            const timer = setInterval(() => {
+                p += 2;
+                floodBar.style.width = p + "%";
+                if (p % 10 === 0 && window.DiveAudio) DiveAudio.bubblePop();
+                if (p >= 100) {
+                    clearInterval(timer);
+                    floodBtn.style.display = "none";
+                    diveNextBtn.style.display = "inline-flex";
+                    window.logTerminal(term, "压载水舱注水完成 (100%)", "success");
+                    window.logTerminal(term, "外壳密封检测通过，下潜通道开启！", "success");
+                    if (window.DiveAudio) DiveAudio.sonarUnlock();
+                }
+            }, 50);
+        });
+    </script>
+</body>
+</html>
+

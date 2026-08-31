@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#030c18">
+    <title>深海记忆潜航 · 深渊层 (4000m)</title>
+    <link rel="stylesheet" href="../assets/dive.css">
+    <style>
+        .safety-log-card {
+            background: rgba(0, 245, 212, 0.08);
+            border: 1px solid var(--c-accent);
+            border-radius: var(--radius-hud);
+            padding: 18px 22px;
+            margin-top: 16px;
+            line-height: 1.85;
+            font-size: 0.95rem;
+            color: #f0f6fc;
+            display: none;
+            animation: stageIn 0.5s ease both;
+        }
+    </style>
+</head>
+<body>
+    <main class="main-stage">
+        <span class="stage-badge" style="border-color: var(--c-warn); color: var(--c-warn);">STAGE 03 // ABYSSAL ZONE 4,000M</span>
+        <h1 class="stage-title" id="headlineText">深渊层 · 400大气压下的信任配平</h1>
+        <p class="stage-desc" id="instructionText"></p>
+
+        <div class="pressure-deck">
+            <div class="pressure-gauges">
+                <div class="gauge-card">
+                    <span class="tele-label" id="portLabel">左舷排气阀 (PORT VALVE)</span>
+                    <div class="gauge-val-display" id="portVal">350 Bar</div>
+                    <div class="pressure-slider-wrap">
+                        <input type="range" class="valve-slider" id="portSlider" min="300" max="550" value="350" aria-label="左舷水压调节滑块">
+                    </div>
+                </div>
+                <div class="gauge-card">
+                    <span class="tele-label" id="stbdLabel">右舷注水阀 (STBD VALVE)</span>
+                    <div class="gauge-val-display" id="stbdVal">510 Bar</div>
+                    <div class="pressure-slider-wrap">
+                        <input type="range" class="valve-slider" id="stbdSlider" min="300" max="550" value="510" aria-label="右舷水压调节滑块">
+                    </div>
+                </div>
+            </div>
+
+            <div class="stabilize-timer-bar" title="水压平稳持续进度">
+                <div class="stabilize-progress" id="stabProgress"></div>
+            </div>
+
+            <div class="safety-log-card" id="safetyLogCard"></div>
+        </div>
+
+        <div class="sub-terminal" id="terminalBox" aria-live="polite">
+            <div class="terminal-line warn">> 警报：深渊高压来袭，请调节左右双舷滑块维持在 420 ± 25 Bar (区间: 395 ~ 445 Bar)</div>
+        </div>
+
+        <div style="text-align: center; margin-top: 20px;">
+            <a class="btn-primary" id="nextStageBtn" href="./04-resonance.html" style="display: none;">
+                下潜至 6000m 海沟热泉 ➔
+            </a>
+        </div>
+    </main>
+
+    <script src="../assets/dive-config.js"></script>
+    <script src="../assets/dive-nav.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const pageData = DIVE_CONFIG.pages.abyss;
+            document.getElementById("headlineText").textContent = pageData.headline;
+            document.getElementById("instructionText").textContent = pageData.instruction;
+            document.getElementById("portLabel").textContent = pageData.valvePortLabel;
+            document.getElementById("stbdLabel").textContent = pageData.valveStarboardLabel;
+
+            const portSlider = document.getElementById("portSlider");
+            const stbdSlider = document.getElementById("stbdSlider");
+            const portVal = document.getElementById("portVal");
+            const stbdVal = document.getElementById("stbdVal");
+            const stabProgress = document.getElementById("stabProgress");
+            const term = document.getElementById("terminalBox");
+            const nextBtn = document.getElementById("nextStageBtn");
+            const logCard = document.getElementById("safetyLogCard");
+
+            const target = pageData.targetPressure;
+            const tol = pageData.tolerance;
+            let progress = 0;
+            let isSolved = false;
+
+            function isSafe(v) {
+                return v >= (target - tol) && v <= (target + tol);
+            }
+
+            function updateUI() {
+                if (isSolved) return;
+                const p = parseInt(portSlider.value);
+                const s = parseInt(stbdSlider.value);
+
+                portVal.textContent = p + " Bar";
+                stbdVal.textContent = s + " Bar";
+
+                const pSafe = isSafe(p);
+                const sSafe = isSafe(s);
+
+                portVal.className = "gauge-val-display " + (pSafe ? "is-safe" : "");
+                stbdVal.className = "gauge-val-display " + (sSafe ? "is-safe" : "");
+            }
+
+            portSlider.addEventListener("input", () => {
+                if (window.DiveAudio) DiveAudio.valveClick();
+                updateUI();
+            });
+
+            stbdSlider.addEventListener("input", () => {
+                if (window.DiveAudio) DiveAudio.valveClick();
+                updateUI();
+            });
+
+            // 持续判定循环
+            const checker = setInterval(() => {
+                if (isSolved) return;
+                const p = parseInt(portSlider.value);
+                const s = parseInt(stbdSlider.value);
+
+                if (isSafe(p) && isSafe(s)) {
+                    progress += 6;
+                    if (progress >= 100) {
+                        isSolved = true;
+                        progress = 100;
+                        clearInterval(checker);
+
+                        portSlider.disabled = true;
+                        stbdSlider.disabled = true;
+
+                        if (window.DiveAudio) DiveAudio.sonarUnlock();
+
+                        logCard.style.display = "block";
+                        logCard.innerHTML = `<strong style="color: var(--c-accent);">【耐压安全日志】：</strong><br>${pageData.logText.replaceAll('\n', '<br>')}`;
+
+                        window.logTerminal(term, pageData.stabilizedNotice, "success");
+                        nextBtn.style.display = "inline-flex";
+                    }
+                } else {
+                    progress = Math.max(0, progress - 8);
+                }
+                stabProgress.style.width = progress + "%";
+            }, 80);
+        });
+    </script>
+</body>
+</html>

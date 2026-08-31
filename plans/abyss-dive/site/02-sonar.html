@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#041021">
+    <title>深海记忆潜航 · 午夜区 (1000m)</title>
+    <link rel="stylesheet" href="../assets/dive.css">
+    <style>
+        .sonar-item-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: rgba(0, 245, 212, 0.15);
+            color: var(--c-accent);
+            font-size: 0.76rem;
+            margin-left: 6px;
+            font-family: var(--font-mono);
+        }
+    </style>
+</head>
+<body>
+    <main class="main-stage">
+        <span class="stage-badge">STAGE 02 // MIDNIGHT ZONE 1,000M</span>
+        <h1 class="stage-title" id="headlineText">午夜区 · 声呐雷达心动三角定位</h1>
+        <p class="stage-desc" id="instructionText"></p>
+
+        <div class="sonar-container">
+            <div class="radar-screen" id="radarScreen">
+                <div class="radar-grid"></div>
+                <div class="radar-sweep"></div>
+                <!-- 3 个闪烁回波源 -->
+                <div class="radar-blip" id="blip1" style="left: 68%; top: 30%;" role="button" aria-label="声源 Alpha"></div>
+                <div class="radar-blip" id="blip2" style="left: 48%; top: 78%;" role="button" aria-label="声源 Beta"></div>
+                <div class="radar-blip" id="blip3" style="left: 24%; top: 56%;" role="button" aria-label="声源 Gamma"></div>
+            </div>
+
+            <div class="sonar-details-list">
+                <button class="btn-primary" id="pingBtn">
+                    <span id="pingBtnText">发射主动声呐 Ping (Emit Sonar)</span>
+                </button>
+                <div class="sonar-item" id="item1">
+                    <strong style="color: var(--c-accent);">[ECHO-ALPHA] 方位 042° / 深度 1,120m</strong>
+                    <div style="font-size: 0.85rem; color: var(--c-text-dim); margin-top: 4px;">等待主动声呐脉冲发射...</div>
+                </div>
+                <div class="sonar-item" id="item2">
+                    <strong style="color: var(--c-accent);">[ECHO-BETA] 方位 180° / 深度 1,350m</strong>
+                    <div style="font-size: 0.85rem; color: var(--c-text-dim); margin-top: 4px;">等待主动声呐脉冲发射...</div>
+                </div>
+                <div class="sonar-item" id="item3">
+                    <strong style="color: var(--c-accent);">[ECHO-GAMMA] 方位 275° / 深度 1,500m</strong>
+                    <div style="font-size: 0.85rem; color: var(--c-text-dim); margin-top: 4px;">等待主动声呐脉冲发射...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sub-terminal" id="terminalBox" aria-live="polite">
+            <div class="terminal-line info">> 点击「发射主动声呐 Ping」扫描完全黑暗的 1000m 海域</div>
+        </div>
+
+        <div style="text-align: center; margin-top: 20px;">
+            <a class="btn-primary" id="nextStageBtn" href="./03-pressure.html" style="display: none;">
+                下潜至 4000m 深渊层 ➔
+            </a>
+        </div>
+    </main>
+
+    <script src="../assets/dive-config.js"></script>
+    <script src="../assets/dive-nav.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const pageData = DIVE_CONFIG.pages.midnight;
+            document.getElementById("headlineText").textContent = pageData.headline;
+            document.getElementById("instructionText").textContent = pageData.instruction;
+
+            const pingBtn = document.getElementById("pingBtn");
+            const pingBtnText = document.getElementById("pingBtnText");
+            const term = document.getElementById("terminalBox");
+            const nextBtn = document.getElementById("nextStageBtn");
+            const pings = pageData.radarPings;
+
+            let identifiedCount = 0;
+            let hasPinged = false;
+
+            pingBtn.addEventListener("click", () => {
+                if (hasPinged) return;
+                hasPinged = true;
+                if (window.DiveAudio) DiveAudio.sonarPing(880, 2.2);
+                pingBtnText.textContent = "声呐扫描中 (Scanning...)";
+                pingBtn.disabled = true;
+
+                window.logTerminal(term, pageData.pingingNotice, "warn");
+                window.logTerminal(term, "雷达捕获到 3 处高能量回声信号，请点击雷达屏幕上的黄色光点进行解析！", "success");
+
+                [1, 2, 3].forEach(i => {
+                    const blip = document.getElementById(`blip${i}`);
+                    blip.classList.add("is-visible");
+                    blip.onclick = () => {
+                        if (blip.classList.contains("is-locked")) return;
+                        blip.classList.add("is-locked");
+                        identifiedCount++;
+                        if (window.DiveAudio) DiveAudio.bubblePop();
+
+                        const data = pings[i - 1];
+                        const item = document.getElementById(`item${i}`);
+                        item.classList.add("is-identified");
+                        item.innerHTML = `
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                                <strong style="color: var(--c-accent);">${data.label} · ${data.coord}</strong>
+                                <span class="sonar-item-badge">${data.badge}</span>
+                            </div>
+                            <div style="font-size: 0.88rem; color: var(--c-text); line-height: 1.65; white-space: pre-line;">${data.text}</div>
+                        `;
+
+                        window.logTerminal(term, `已锁定回声源 [${data.label}] · ${data.badge} (${identifiedCount}/3)`, "success");
+
+                        if (identifiedCount === 3) {
+                            if (window.DiveAudio) DiveAudio.sonarUnlock();
+                            window.logTerminal(term, pageData.completeNotice, "success");
+                            pingBtnText.textContent = "所有声源锁定完成";
+                            nextBtn.style.display = "inline-flex";
+                        }
+                    };
+                });
+            });
+        });
+    </script>
+</body>
+</html>

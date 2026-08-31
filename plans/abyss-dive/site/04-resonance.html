@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#020712">
+    <title>深海记忆潜航 · 海沟热泉 (6000m)</title>
+    <link rel="stylesheet" href="../assets/dive.css">
+    <style>
+        .thermal-beacon-status {
+            text-align: center;
+            font-family: var(--font-mono);
+            font-size: 0.88rem;
+            color: var(--c-danger);
+            margin-top: 10px;
+        }
+        .thermal-beacon-status.is-active {
+            color: var(--c-accent);
+            text-shadow: 0 0 12px var(--c-accent);
+        }
+    </style>
+</head>
+<body>
+    <main class="main-stage">
+        <span class="stage-badge" style="border-color: rgba(255, 92, 138, 0.4); color: var(--c-danger);">STAGE 04 // HADAL TRENCH 6,000M</span>
+        <h1 class="stage-title" id="headlineText">海沟热泉 · 冰冷深渊里的生命频率</h1>
+        <p class="stage-desc" id="instructionText"></p>
+
+        <div class="resonance-console">
+            <canvas class="wave-canvas" id="waveCanvas" width="800" height="140"></canvas>
+            <div class="thermal-beacon-status" id="beaconStatus">● 热泉信标能量：0% [待同步谐波]</div>
+
+            <div class="harmonics-grid" id="harmonicsGrid"></div>
+        </div>
+
+        <div class="sub-terminal" id="terminalBox" aria-live="polite">
+            <div class="terminal-line info">> 按频率从低到高（陪伴的基调 → 偏爱的共鸣 → 坚定的未来）依次触发谐波发生器</div>
+        </div>
+
+        <div style="text-align: center; margin-top: 20px;">
+            <a class="btn-primary" id="nextStageBtn" href="./05-challenger.html" style="display: none;">
+                下潜至 10,928m 挑战者深渊 ➔
+            </a>
+        </div>
+    </main>
+
+    <script src="../assets/dive-config.js"></script>
+    <script src="../assets/dive-nav.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const pageData = DIVE_CONFIG.pages.resonance;
+            document.getElementById("headlineText").textContent = pageData.headline;
+            document.getElementById("instructionText").textContent = pageData.instruction;
+
+            const canvas = document.getElementById("waveCanvas");
+            const ctx = canvas.getContext("2d");
+            const grid = document.getElementById("harmonicsGrid");
+            const term = document.getElementById("terminalBox");
+            const beaconStatus = document.getElementById("beaconStatus");
+            const nextBtn = document.getElementById("nextStageBtn");
+
+            const harmonics = pageData.harmonics;
+            const seq = pageData.correctSequence;
+            let currentStep = 0;
+            let isCompleted = false;
+
+            // 渲染按钮
+            harmonics.forEach((h, idx) => {
+                const btn = document.createElement("button");
+                btn.type = "button";
+                btn.className = "harmonic-btn";
+                btn.id = `hBtn${idx}`;
+                btn.innerHTML = `
+                    <div style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--c-danger); margin-bottom: 4px;">${h.label}</div>
+                    <div style="font-weight: 600; font-size: 1.05rem; color: var(--c-text);">${h.name}</div>
+                    <div style="font-size: 0.82rem; color: var(--c-text-dim); margin-top: 5px; line-height: 1.5;">${h.desc}</div>
+                `;
+
+                btn.addEventListener("click", () => {
+                    if (isCompleted) return;
+
+                    if (window.DiveAudio) DiveAudio.harmonicChime(h.freq);
+
+                    if (idx === seq[currentStep]) {
+                        btn.classList.add("is-active");
+                        currentStep++;
+                        beaconStatus.textContent = `● 热泉信标能量：${Math.round((currentStep / seq.length) * 100)}% [第 ${currentStep} 阶谐波锁定]`;
+                        window.logTerminal(term, pageData.stepNotice.replace("{step}", currentStep), "warn");
+
+                        if (currentStep === seq.length) {
+                            isCompleted = true;
+                            beaconStatus.className = "thermal-beacon-status is-active";
+                            beaconStatus.textContent = "● 热泉信标能量：100% [完美共振锁定]";
+                            if (window.DiveAudio) DiveAudio.sonarUnlock();
+                            window.logTerminal(term, pageData.successText, "success");
+                            nextBtn.style.display = "inline-flex";
+                        }
+                    } else {
+                        // 顺序错误，重置
+                        if (window.DiveAudio) DiveAudio.bubblePop();
+                        window.logTerminal(term, pageData.failNotice, "error");
+                        currentStep = 0;
+                        beaconStatus.textContent = "● 热泉信标能量：0% [待重新同步]";
+                        document.querySelectorAll(".harmonic-btn").forEach(b => b.classList.remove("is-active"));
+                    }
+                });
+
+                grid.appendChild(btn);
+            });
+
+            // 波形动画
+            let phase = 0;
+            function drawWave() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.lineWidth = 2.5;
+                ctx.strokeStyle = isCompleted ? "#00f5d4" : currentStep > 0 ? "#ffb703" : "#ff5c8a";
+
+                ctx.beginPath();
+                const midY = canvas.height / 2;
+                for (let x = 0; x < canvas.width; x++) {
+                    const noise = (1 - (currentStep / seq.length)) * (Math.sin(x * 0.1 + phase * 2) * 14);
+                    const mainWave = Math.sin(x * 0.03 + phase) * (20 + currentStep * 12);
+                    const y = midY + mainWave + noise;
+                    if (x === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+
+                phase += 0.04 + currentStep * 0.02;
+                requestAnimationFrame(drawWave);
+            }
+            drawWave();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>原型 3：声呐雷达与声源定位 (1000m)</title>
+    <link rel="stylesheet" href="../assets/dive.css">
+</head>
+<body>
+    <main class="main-stage">
+        <span class="stage-badge">PROTOTYPE #3 // 1000M DEPTH</span>
+        <h1 class="stage-title">午夜区 · 声呐雷达定位</h1>
+        <p class="stage-desc">测试声呐 Ping 脉冲发射、雷达扫描线、光点闪烁与声学解析。</p>
+
+        <div class="sonar-container">
+            <div class="radar-screen" id="radarScreen">
+                <div class="radar-grid"></div>
+                <div class="radar-sweep"></div>
+                <!-- 3 个光点 -->
+                <div class="radar-blip" id="blip1" style="left: 65%; top: 32%;"></div>
+                <div class="radar-blip" id="blip2" style="left: 50%; top: 78%;"></div>
+                <div class="radar-blip" id="blip3" style="left: 22%; top: 58%;"></div>
+            </div>
+
+            <div class="sonar-details-list">
+                <button class="btn-primary" id="pingBtn">发射声呐脉冲 (Ping)</button>
+                <div class="sonar-item" id="item1">
+                    <strong style="color: var(--c-accent);">[ECHO-ALPHA]</strong>
+                    <div style="font-size: 0.85rem; color: var(--c-text-dim); margin-top: 4px;">等待雷达扫描...</div>
+                </div>
+                <div class="sonar-item" id="item2">
+                    <strong style="color: var(--c-accent);">[ECHO-BETA]</strong>
+                    <div style="font-size: 0.85rem; color: var(--c-text-dim); margin-top: 4px;">等待雷达扫描...</div>
+                </div>
+                <div class="sonar-item" id="item3">
+                    <strong style="color: var(--c-accent);">[ECHO-GAMMA]</strong>
+                    <div style="font-size: 0.85rem; color: var(--c-text-dim); margin-top: 4px;">等待雷达扫描...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sub-terminal" id="terminalBox">
+            <div class="terminal-line info">> 点击「发射声呐脉冲」开始探测</div>
+        </div>
+    </main>
+
+    <script src="../assets/dive-config.js"></script>
+    <script src="../assets/dive-nav.js"></script>
+    <script>
+        const pingBtn = document.getElementById("pingBtn");
+        const term = document.getElementById("terminalBox");
+        const pings = DIVE_CONFIG.pages.midnight.radarPings;
+        let identified = 0;
+
+        pingBtn.addEventListener("click", () => {
+            if (window.DiveAudio) DiveAudio.sonarPing(880, 1.8);
+            window.logTerminal(term, "声呐脉冲已发射... 接收到 3 处回波信号，请点击雷达光点进行锁定", "warn");
+
+            [1, 2, 3].forEach(i => {
+                const blip = document.getElementById(`blip${i}`);
+                blip.classList.add("is-visible");
+                blip.onclick = () => {
+                    if (blip.classList.contains("is-locked")) return;
+                    blip.classList.add("is-locked");
+                    identified++;
+                    if (window.DiveAudio) DiveAudio.bubblePop();
+
+                    const data = pings[i - 1];
+                    const item = document.getElementById(`item${i}`);
+                    item.classList.add("is-identified");
+                    item.innerHTML = `
+                        <strong style="color: var(--c-accent);">${data.label} · ${data.badge}</strong>
+                        <div style="font-size: 0.85rem; color: var(--c-text); margin-top: 4px;">${data.text}</div>
+                    `;
+
+                    window.logTerminal(term, `已锁定回声源 [${data.label}] (${identified}/3)`, "success");
+
+                    if (identified === 3 && window.DiveAudio) {
+                        DiveAudio.sonarUnlock();
+                        window.logTerminal(term, "所有声源解析完成，航线已闭环！", "success");
+                    }
+                };
+            });
+        });
+    </script>
+</body>
+</html>
+

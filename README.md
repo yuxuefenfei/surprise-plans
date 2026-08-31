@@ -2,10 +2,11 @@
 
 一个基于纯 `HTML/CSS/JavaScript` 的互动网页编排项目。仓库中既包含若干单页动画原型，也包含已经串联完成的多页面成品站点。
 
-当前已有两套计划：
+当前已有三套计划：
 
 - [plans/girlfriend-surprise](./plans/girlfriend-surprise/)：浪漫告白方向，主题为《给你的秘密宇宙》
 - [plans/cyber-dossier](./plans/cyber-dossier/)：赛博侦探方向，主题为《赛博侦探机密档案》
+- [plans/abyss-dive](./plans/abyss-dive/)：深海科考方向，主题为《深海记忆潜航》
 
 ## 项目结构
 
@@ -14,6 +15,12 @@ html-design/
 ├─ README.md
 ├─ plans/
 │  ├─ _template/
+│  │  ├─ README.md
+│  │  ├─ assets/
+│  │  ├─ docs/
+│  │  ├─ prototypes/
+│  │  └─ site/
+│  ├─ abyss-dive/
 │  │  ├─ README.md
 │  │  ├─ assets/
 │  │  ├─ docs/
@@ -96,6 +103,19 @@ html-design/
 
 如果只想预览完整作品，请从 [plans/cyber-dossier/site/index.html](./plans/cyber-dossier/site/index.html) 打开。
 
+#### Abyss Dive
+
+[plans/abyss-dive/site](./plans/abyss-dive/site/) 是一套深海科考与记忆深潜风格的沉浸式互动站点，页面顺序如下：
+
+1. [index.html](./plans/abyss-dive/site/index.html)：浅海启航页 (0m)
+2. [01-twilight.html](./plans/abyss-dive/site/01-twilight.html)：微光层探索页 (200m)
+3. [02-sonar.html](./plans/abyss-dive/site/02-sonar.html)：午夜区声呐页 (1000m)
+4. [03-pressure.html](./plans/abyss-dive/site/03-pressure.html)：深渊水压解谜页 (4000m)
+5. [04-resonance.html](./plans/abyss-dive/site/04-resonance.html)：海沟热泉共振页 (6000m)
+6. [05-challenger.html](./plans/abyss-dive/site/05-challenger.html)：挑战者深渊终极回响页 (10000m)
+
+如果只想预览完整作品，请从 [plans/abyss-dive/site/index.html](./plans/abyss-dive/site/index.html) 打开。
+
 ## 技术特点
 
 - 零依赖，无需安装包管理器或构建工具
@@ -148,6 +168,13 @@ html-design/
 - [页面剧情与文案策划.md](./plans/cyber-dossier/docs/页面剧情与文案策划.md)
 - [文案替换清单.md](./plans/cyber-dossier/docs/文案替换清单.md)
 - [谜题与线索设计.md](./plans/cyber-dossier/docs/谜题与线索设计.md)
+
+如果你想继续替换 `abyss-dive` 的领航员称呼、水母记忆、声呐坐标或最终真言，优先参考：
+
+- [页面剧情与文案策划.md](./plans/abyss-dive/docs/页面剧情与文案策划.md)
+- [文案替换清单.md](./plans/abyss-dive/docs/文案替换清单.md)
+- [谜题与线索设计.md](./plans/abyss-dive/docs/谜题与线索设计.md)
+- [配置蓝图.md](./plans/abyss-dive/docs/配置蓝图.md)
 
 常见的可编辑字段包括：
 

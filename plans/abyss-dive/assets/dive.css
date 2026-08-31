@@ -1,0 +1,918 @@
+/**
+ * Abyss Dive · 深海记忆潜航 - 核心样式系统 (深度升级版)
+ * Oceanic Depth, Bioluminescence, Submarine HUD & Deep Descent Transition
+ */
+
+:root {
+    --c-ocean-0:       #0a2540;
+    --c-ocean-200:     #071b30;
+    --c-ocean-1000:    #041021;
+    --c-ocean-4000:    #030c18;
+    --c-ocean-6000:    #020712;
+    --c-ocean-10000:   #01040a;
+
+    --c-bg:            var(--c-ocean-0);
+    --c-accent:        #00f5d4;
+    --c-accent-rgb:    0, 245, 212;
+    --c-accent-sec:    #38ef7d;
+    --c-warn:          #ffb703;
+    --c-danger:        #ff5c8a;
+    --c-text:          #e6f1ff;
+    --c-text-dim:      #8da2c0;
+    --c-text-muted:    #4e6182;
+    
+    --c-glass-bg:      rgba(6, 24, 44, 0.72);
+    --c-glass-border:  rgba(0, 245, 212, 0.25);
+    --c-glass-glow:    rgba(0, 245, 212, 0.14);
+
+    --radius-hud:      12px;
+    --radius-card:     18px;
+    --radius-pill:     999px;
+    --font-mono:       'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    --font-main:       -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+
+/* 基础重置 */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    min-height: 100vh;
+    min-height: 100svh;
+    font-family: var(--font-main);
+    color: var(--c-text);
+    background-color: var(--c-bg);
+    background-image: 
+        radial-gradient(ellipse at 50% 10%, rgba(var(--c-accent-rgb), 0.09) 0%, transparent 65%),
+        linear-gradient(180deg, var(--c-bg) 0%, #010307 100%);
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    transition: background-color 0.8s ease, color 0.4s ease;
+}
+
+/* ===== 背景微粒：海洋雪 (Marine Snow) ===== */
+.marine-snow {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+}
+
+.snow-particle {
+    position: absolute;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.85) 0%, rgba(var(--c-accent-rgb), 0.45) 60%, transparent 100%);
+    border-radius: 50%;
+    filter: blur(0.5px);
+    opacity: 0.55;
+    animation: snowFall linear infinite;
+}
+
+@keyframes snowFall {
+    0% {
+        transform: translateY(-20px) translateX(0);
+        opacity: 0;
+    }
+    15% {
+        opacity: 0.7;
+    }
+    85% {
+        opacity: 0.7;
+    }
+    100% {
+        transform: translateY(105vh) translateX(35px);
+        opacity: 0;
+    }
+}
+
+/* ===== 顶部 HUD 与状态栏 ===== */
+.sub-hud-header {
+    width: min(96vw, 920px);
+    margin: 16px auto 0;
+    padding: 12px 20px;
+    background: var(--c-glass-bg);
+    border: 1px solid var(--c-glass-border);
+    border-radius: var(--radius-hud);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 10;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.hud-vessel {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--c-accent);
+    letter-spacing: 0.08em;
+}
+
+.hud-status-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background-color: var(--c-accent);
+    box-shadow: 0 0 12px var(--c-accent);
+    animation: statusPulse 2s ease-in-out infinite;
+}
+
+@keyframes statusPulse {
+    0%, 100% { opacity: 0.4; transform: scale(0.9); }
+    50% { opacity: 1; transform: scale(1.25); }
+}
+
+.hud-telemetry {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+}
+
+.tele-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.tele-label {
+    font-size: 0.65rem;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+}
+
+.tele-value {
+    color: var(--c-accent);
+    font-weight: bold;
+}
+
+.audio-toggle-btn {
+    background: transparent;
+    border: 1px solid var(--c-glass-border);
+    color: var(--c-accent);
+    padding: 5px 12px;
+    border-radius: var(--radius-pill);
+    font-size: 0.82rem;
+    font-family: var(--font-mono);
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.audio-toggle-btn:hover {
+    background: rgba(var(--c-accent-rgb), 0.18);
+    box-shadow: 0 0 12px rgba(var(--c-accent-rgb), 0.3);
+}
+
+/* ===== 深度计 HUD 进度轨 ===== */
+.depth-rail {
+    width: min(96vw, 920px);
+    margin: 10px auto 16px;
+    display: flex;
+    justify-content: space-between;
+    gap: 6px;
+    z-index: 10;
+    overflow-x: auto;
+    padding-bottom: 4px;
+}
+
+.depth-node {
+    flex: 1;
+    min-width: 95px;
+    padding: 8px 10px;
+    background: rgba(4, 16, 33, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--c-text-dim);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.25s ease;
+    cursor: pointer;
+}
+
+.depth-node.is-active {
+    border-color: var(--c-accent);
+    background: rgba(var(--c-accent-rgb), 0.14);
+    color: var(--c-accent);
+    box-shadow: 0 0 16px rgba(var(--c-accent-rgb), 0.28);
+}
+
+.depth-node.is-done {
+    border-color: rgba(var(--c-accent-rgb), 0.4);
+    color: var(--c-text);
+}
+
+.depth-node.is-locked {
+    opacity: 0.35;
+    cursor: not-allowed;
+    border-style: dashed;
+}
+
+.node-meter {
+    font-weight: bold;
+    font-size: 0.82rem;
+}
+
+.node-name {
+    font-size: 0.68rem;
+    opacity: 0.85;
+}
+
+/* ===== AI 领航员「AQUA-09」通信电波框 ===== */
+.aqua-transmission-box {
+    width: min(94vw, 860px);
+    margin: 0 auto 16px;
+    background: rgba(2, 10, 22, 0.85);
+    border: 1px solid rgba(0, 245, 212, 0.35);
+    border-left: 4px solid var(--c-accent);
+    border-radius: var(--radius-hud);
+    padding: 12px 18px;
+    font-family: var(--font-mono);
+    font-size: 0.84rem;
+    line-height: 1.65;
+    color: #a8d5e5;
+    box-shadow: 0 4px 16px rgba(0, 245, 212, 0.12);
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    z-index: 8;
+    backdrop-filter: blur(10px);
+}
+
+.aqua-beacon {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin-top: 6px;
+    border-radius: 50%;
+    background-color: var(--c-accent);
+    box-shadow: 0 0 10px var(--c-accent);
+    animation: statusPulse 1.5s ease-in-out infinite;
+    flex-shrink: 0;
+}
+
+.aqua-text {
+    flex: 1;
+    min-height: 1.65em;
+}
+
+/* ===== 主容器卡片 ===== */
+.main-stage {
+    width: min(94vw, 860px);
+    margin: 0 auto 30px;
+    padding: 36px 32px;
+    background: var(--c-glass-bg);
+    border: 1px solid var(--c-glass-border);
+    border-radius: var(--radius-card);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    box-shadow: 
+        0 24px 60px rgba(0, 0, 0, 0.65),
+        0 0 35px var(--c-glass-glow),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    z-index: 5;
+    position: relative;
+    animation: stageIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes stageIn {
+    from { opacity: 0; transform: translateY(20px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.stage-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 14px;
+    background: rgba(var(--c-accent-rgb), 0.12);
+    border: 1px solid rgba(var(--c-accent-rgb), 0.35);
+    border-radius: var(--radius-pill);
+    color: var(--c-accent);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    margin-bottom: 14px;
+}
+
+.stage-title {
+    font-size: clamp(1.65rem, 4.5vw, 2.4rem);
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, #ffffff 0%, var(--c-accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.stage-desc {
+    color: var(--c-text-dim);
+    font-size: 0.98rem;
+    line-height: 1.85;
+    margin-bottom: 24px;
+    white-space: pre-line;
+}
+
+/* ===== 控制台与日志终端 ===== */
+.sub-terminal {
+    background: rgba(1, 6, 14, 0.88);
+    border: 1px solid rgba(0, 245, 212, 0.22);
+    border-radius: 8px;
+    padding: 16px 20px;
+    font-family: var(--font-mono);
+    font-size: 0.84rem;
+    line-height: 1.7;
+    margin: 20px 0;
+    color: #9cb3cc;
+    position: relative;
+    overflow: hidden;
+}
+
+.sub-terminal::before {
+    content: "TELEMETRY LOG // SECURE CHANNEL";
+    position: absolute;
+    top: 4px;
+    right: 12px;
+    font-size: 0.6rem;
+    color: var(--c-text-muted);
+    letter-spacing: 0.12em;
+}
+
+.terminal-line {
+    margin: 4px 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+}
+
+.terminal-line.info { color: #8da2c0; }
+.terminal-line.success { color: var(--c-accent); }
+.terminal-line.warn { color: var(--c-warn); }
+.terminal-line.error { color: var(--c-danger); }
+
+/* ===== 按钮系统 ===== */
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 34px;
+    background: linear-gradient(135deg, rgba(var(--c-accent-rgb), 0.92), rgba(56, 239, 125, 0.85));
+    color: #01040a;
+    font-weight: 600;
+    font-size: 0.98rem;
+    letter-spacing: 0.05em;
+    border: none;
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 22px rgba(var(--c-accent-rgb), 0.38);
+}
+
+.btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(var(--c-accent-rgb), 0.55);
+    background: linear-gradient(135deg, #00f5d4, #38ef7d);
+}
+
+.btn-primary:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.btn-primary:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+.btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 24px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--c-text);
+    border: 1px solid var(--c-glass-border);
+    border-radius: var(--radius-pill);
+    font-size: 0.88rem;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+    background: rgba(var(--c-accent-rgb), 0.14);
+    border-color: var(--c-accent);
+}
+
+/* ===== 全屏万米深潜推进遮罩 (Deep Descent Overlay) ===== */
+.deep-descent-overlay {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle at center, #071b30 0%, #01040a 85%);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+    overflow: hidden;
+}
+
+.deep-descent-overlay.is-active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.descent-streaks-container {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.descent-streak {
+    position: absolute;
+    width: 2px;
+    background: linear-gradient(0deg, transparent 0%, var(--c-accent) 50%, #ffffff 100%);
+    opacity: 0.7;
+    animation: streakUp linear infinite;
+}
+
+@keyframes streakUp {
+    0% {
+        transform: translateY(110vh);
+        opacity: 0;
+    }
+    30% {
+        opacity: 0.9;
+    }
+    100% {
+        transform: translateY(-20vh);
+        opacity: 0;
+    }
+}
+
+.descent-hud-card {
+    position: relative;
+    z-index: 10;
+    background: rgba(2, 9, 20, 0.85);
+    border: 1px solid var(--c-accent);
+    border-radius: var(--radius-card);
+    padding: 36px 44px;
+    text-align: center;
+    box-shadow: 0 0 50px rgba(0, 245, 212, 0.35);
+    backdrop-filter: blur(12px);
+    width: min(90vw, 460px);
+}
+
+.descent-depth-counter {
+    font-family: var(--font-mono);
+    font-size: clamp(2.6rem, 8vw, 3.8rem);
+    font-weight: 700;
+    color: var(--c-accent);
+    text-shadow: 0 0 20px rgba(0, 245, 212, 0.6);
+    margin: 10px 0;
+}
+
+.descent-status-text {
+    font-family: var(--font-mono);
+    font-size: 0.88rem;
+    color: var(--c-text-dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.descent-pressure-bar-wrap {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 18px;
+}
+
+.descent-pressure-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--c-accent), #38ef7d);
+    transition: width 0.1s linear;
+}
+
+/* ===== 交互模块：200m 水母捕获 ===== */
+.jellyfish-chamber {
+    position: relative;
+    height: 380px;
+    border: 1px solid rgba(0, 245, 212, 0.18);
+    border-radius: var(--radius-hud);
+    background: radial-gradient(circle at 50% 50%, rgba(7, 30, 54, 0.65) 0%, rgba(2, 9, 18, 0.95) 100%);
+    overflow: hidden;
+    margin: 20px 0;
+}
+
+.jelly-creature {
+    position: absolute;
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.2s ease, filter 0.2s ease;
+    animation: jellyDrift 6s ease-in-out infinite alternate;
+}
+
+.jelly-creature:hover {
+    filter: brightness(1.45) drop-shadow(0 0 14px var(--jelly-glow));
+    transform: scale(1.12);
+}
+
+.jelly-creature.is-caught {
+    pointer-events: none;
+    opacity: 0.3;
+    filter: grayscale(1);
+    transform: scale(0.85);
+}
+
+@keyframes jellyDrift {
+    0%   { transform: translateY(0) rotate(-3deg); }
+    50%  { transform: translateY(-24px) rotate(4deg); }
+    100% { transform: translateY(-8px) rotate(-2deg); }
+}
+
+.jelly-card-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(1, 4, 10, 0.8);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.jelly-card-modal.is-open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.jelly-modal-content {
+    width: min(90vw, 500px);
+    background: #06182a;
+    border: 1px solid var(--c-accent);
+    box-shadow: 0 12px 45px rgba(0, 245, 212, 0.35);
+    border-radius: var(--radius-card);
+    padding: 32px 28px;
+    text-align: center;
+    position: relative;
+    transform: scale(0.94);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.jelly-card-modal.is-open .jelly-modal-content {
+    transform: scale(1);
+}
+
+/* ===== 交互模块：1000m 声呐雷达 ===== */
+.sonar-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    align-items: center;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+.radar-screen {
+    width: 290px;
+    height: 290px;
+    border-radius: 50%;
+    border: 2px solid var(--c-accent);
+    background: 
+        radial-gradient(circle, rgba(0, 245, 212, 0.06) 0%, rgba(2, 10, 20, 0.96) 100%);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 0 28px rgba(0, 245, 212, 0.25), inset 0 0 22px rgba(0, 245, 212, 0.18);
+}
+
+.radar-grid {
+    position: absolute;
+    inset: 0;
+    background-image: 
+        radial-gradient(circle at center, transparent 32px, rgba(0, 245, 212, 0.16) 33px, transparent 34px),
+        radial-gradient(circle at center, transparent 72px, rgba(0, 245, 212, 0.16) 73px, transparent 74px),
+        radial-gradient(circle at center, transparent 112px, rgba(0, 245, 212, 0.16) 113px, transparent 114px),
+        linear-gradient(rgba(0, 245, 212, 0.12) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 245, 212, 0.12) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 100% 100%, 100% 50%, 50% 100%;
+}
+
+.radar-sweep {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg, rgba(0, 245, 212, 0.45) 0deg, rgba(0, 245, 212, 0) 65deg);
+    animation: radarSpin 4s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes radarSpin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+.radar-blip {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--c-warn);
+    box-shadow: 0 0 12px var(--c-warn);
+    cursor: pointer;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity 0.4s ease, transform 0.2s ease;
+}
+
+.radar-blip.is-visible {
+    opacity: 0.95;
+    animation: blipPulse 1.5s ease-in-out infinite;
+}
+
+.radar-blip.is-locked {
+    background: var(--c-accent);
+    box-shadow: 0 0 14px var(--c-accent);
+    pointer-events: none;
+}
+
+@keyframes blipPulse {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); }
+    50% { transform: translate(-50%, -50%) scale(1.4); }
+}
+
+.sonar-details-list {
+    flex: 1;
+    min-width: 290px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.sonar-item {
+    background: rgba(3, 15, 28, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 14px 16px;
+    transition: all 0.25s ease;
+}
+
+.sonar-item.is-identified {
+    border-color: var(--c-accent);
+    background: rgba(var(--c-accent-rgb), 0.1);
+}
+
+/* ===== 交互模块：4000m 水压配平 ===== */
+.pressure-deck {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.pressure-gauges {
+    display: flex;
+    justify-content: space-around;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.gauge-card {
+    flex: 1;
+    min-width: 250px;
+    background: rgba(2, 9, 18, 0.88);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: var(--radius-hud);
+    padding: 22px;
+    text-align: center;
+}
+
+.gauge-val-display {
+    font-family: var(--font-mono);
+    font-size: 2.2rem;
+    font-weight: bold;
+    color: var(--c-warn);
+    margin: 8px 0;
+}
+
+.gauge-val-display.is-safe {
+    color: var(--c-accent);
+    text-shadow: 0 0 10px rgba(0, 245, 212, 0.4);
+}
+
+.pressure-slider-wrap {
+    margin-top: 14px;
+}
+
+.valve-slider {
+    width: 100%;
+    accent-color: var(--c-accent);
+    cursor: pointer;
+}
+
+.stabilize-timer-bar {
+    height: 7px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 14px;
+}
+
+.stabilize-progress {
+    height: 100%;
+    width: 0%;
+    background: var(--c-accent);
+    transition: width 0.1s linear;
+}
+
+/* ===== 交互模块：6000m 热泉共鸣 ===== */
+.resonance-console {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    margin: 20px 0;
+}
+
+.wave-canvas {
+    width: 100%;
+    height: 140px;
+    border-radius: 8px;
+    background: #010811;
+    border: 1px solid rgba(255, 92, 138, 0.35);
+    box-shadow: 0 0 22px rgba(255, 92, 138, 0.12);
+}
+
+.harmonics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+}
+
+.harmonic-btn {
+    background: rgba(3, 12, 24, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 10px;
+    padding: 15px;
+    color: var(--c-text);
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s ease;
+}
+
+.harmonic-btn:hover {
+    border-color: var(--c-danger);
+    background: rgba(255, 92, 138, 0.12);
+}
+
+.harmonic-btn.is-active {
+    border-color: var(--c-danger);
+    background: rgba(255, 92, 138, 0.22);
+    box-shadow: 0 0 18px rgba(255, 92, 138, 0.4);
+}
+
+/* ===== 交互模块：10000m 探照灯与彩蛋 ===== */
+.searchlight-chamber {
+    position: relative;
+    min-height: 280px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    margin: 20px 0;
+}
+
+.searchlight-beam {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.25) 0%, rgba(0, 245, 212, 0.1) 50%, transparent 85%);
+    opacity: 0;
+    transition: opacity 1.4s ease;
+}
+
+.searchlight-beam.is-lit {
+    opacity: 1;
+}
+
+.deep-verdict-card {
+    background: rgba(2, 6, 14, 0.92);
+    border: 1px solid var(--c-accent);
+    box-shadow: 0 0 35px rgba(0, 245, 212, 0.28);
+    border-radius: var(--radius-card);
+    padding: 34px 30px;
+    max-width: 720px;
+    width: 100%;
+    text-align: left;
+    margin-top: 16px;
+    opacity: 0;
+    transform: translateY(18px);
+    transition: all 0.8s ease;
+}
+
+.deep-verdict-card.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.egg-trigger {
+    color: var(--c-accent);
+    text-decoration: underline;
+    text-decoration-style: dashed;
+    text-underline-offset: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.egg-trigger:hover {
+    color: #fff;
+    text-shadow: 0 0 10px var(--c-accent);
+}
+
+.egg-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.82);
+    backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+
+.egg-modal.is-open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.egg-box {
+    width: min(90vw, 460px);
+    background: #04101e;
+    border: 1px solid var(--c-warn);
+    box-shadow: 0 0 45px rgba(255, 183, 3, 0.4);
+    border-radius: var(--radius-card);
+    padding: 30px 26px;
+    text-align: center;
+}
+
+/* ===== 移动端自适应 ===== */
+@media (max-width: 640px) {
+    .main-stage {
+        padding: 24px 18px;
+        margin-bottom: 20px;
+    }
+    .sub-hud-header {
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-start;
+    }
+    .hud-telemetry {
+        width: 100%;
+        justify-content: space-between;
+    }
+    .depth-rail {
+        gap: 4px;
+    }
+    .depth-node {
+        min-width: 78px;
+        padding: 6px 8px;
+    }
+}
+
+/* ===== 减弱动效 (Accessibility) ===== */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    .marine-snow, .descent-streaks-container { display: none; }
+}

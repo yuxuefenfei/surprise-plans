@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#071b30">
+    <title>深海记忆潜航 · 微光层 (200m)</title>
+    <link rel="stylesheet" href="../assets/dive.css">
+    <style>
+        .jelly-modal-sub {
+            color: var(--c-text-dim);
+            font-size: 0.86rem;
+            margin-bottom: 14px;
+            font-family: var(--font-mono);
+        }
+    </style>
+</head>
+<body>
+    <main class="main-stage">
+        <span class="stage-badge">STAGE 01 // TWILIGHT ZONE 200M</span>
+        <h1 class="stage-title" id="headlineText">微光层 · 漂浮的偏爱碎片</h1>
+        <p class="stage-desc" id="instructionText"></p>
+
+        <div class="jellyfish-chamber" id="chamber"></div>
+
+        <div class="sub-terminal" id="terminalBox" aria-live="polite">
+            <div class="terminal-line info">> 点击舱体内游动的 3 朵发光水母，提取深海记忆微光</div>
+        </div>
+
+        <div style="text-align: center; margin-top: 20px;">
+            <a class="btn-primary" id="nextStageBtn" href="./02-sonar.html" style="display: none;">
+                下潜至 1000m 午夜区 ➔
+            </a>
+        </div>
+    </main>
+
+    <!-- 水母记忆展示弹窗 -->
+    <div class="jelly-card-modal" id="jellyModal">
+        <div class="jelly-modal-content">
+            <span class="stage-badge" id="modalTag">微光黑匣子样本</span>
+            <h2 id="modalTitle" style="color: var(--c-accent); margin: 12px 0 4px;"></h2>
+            <div class="jelly-modal-sub" id="modalSubtitle"></div>
+            <p id="modalBody" style="color: var(--c-text); line-height: 1.9; margin: 16px 0 24px; font-size: 0.96rem; text-align: left; white-space: pre-line;"></p>
+            <button class="btn-primary" id="modalCloseBtn">归档此段微光记忆</button>
+        </div>
+    </div>
+
+    <script src="../assets/dive-config.js"></script>
+    <script src="../assets/dive-nav.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const pageData = DIVE_CONFIG.pages.twilight;
+            document.getElementById("headlineText").textContent = pageData.headline;
+            document.getElementById("instructionText").textContent = pageData.instruction;
+
+            const chamber = document.getElementById("chamber");
+            const term = document.getElementById("terminalBox");
+            const modal = document.getElementById("jellyModal");
+            const modalTitle = document.getElementById("modalTitle");
+            const modalSubtitle = document.getElementById("modalSubtitle");
+            const modalBody = document.getElementById("modalBody");
+            const modalCloseBtn = document.getElementById("modalCloseBtn");
+            const nextBtn = document.getElementById("nextStageBtn");
+
+            const jellies = pageData.jellyfish;
+            let caughtCount = 0;
+
+            jellies.forEach((j, idx) => {
+                const el = document.createElement("div");
+                el.className = "jelly-creature";
+                el.style.left = (15 + idx * 28) + "%";
+                el.style.top = (25 + (idx % 2) * 30) + "%";
+                el.style.setProperty("--jelly-glow", j.glowColor);
+                el.setAttribute("role", "button");
+                el.setAttribute("aria-label", `发光水母: ${j.title}`);
+                el.innerHTML = `
+                    <svg width="72" height="72" viewBox="0 0 64 64" fill="none">
+                        <path d="M12 28C12 16 20 8 32 8C44 8 52 16 52 28C52 34 46 36 40 34C36 32 34 35 32 35C30 35 28 32 24 34C18 36 12 34 12 28Z" fill="${j.glowColor}" fill-opacity="0.58" stroke="${j.glowColor}" stroke-width="2"/>
+                        <path d="M20 36V48C20 52 22 56 22 58" stroke="${j.glowColor}" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M28 36V52C28 56 30 60 30 62" stroke="${j.glowColor}" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M36 36V50C36 54 34 58 34 60" stroke="${j.glowColor}" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M44 36V46C44 50 42 54 42 56" stroke="${j.glowColor}" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                `;
+
+                el.addEventListener("click", () => {
+                    if (el.classList.contains("is-caught")) return;
+                    el.classList.add("is-caught");
+                    caughtCount++;
+                    if (window.DiveAudio) DiveAudio.bubblePop();
+
+                    modalTitle.textContent = j.title;
+                    modalSubtitle.textContent = j.subtitle || "";
+                    modalBody.textContent = j.excerpt;
+                    modal.classList.add("is-open");
+
+                    window.logTerminal(term, `捕获水母微光样本 [${j.title}]，已收集 (${caughtCount}/${jellies.length})`, "success");
+                });
+
+                chamber.appendChild(el);
+            });
+
+            modalCloseBtn.addEventListener("click", () => {
+                modal.classList.remove("is-open");
+                if (caughtCount >= jellies.length) {
+                    if (window.DiveAudio) DiveAudio.sonarUnlock();
+                    window.logTerminal(term, pageData.completeNotice, "success");
+                    nextBtn.style.display = "inline-flex";
+                }
+            });
+        });
+    </script>
+</body>
+</html>

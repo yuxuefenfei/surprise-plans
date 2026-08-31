@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>原型 4：深渊水压双阀门平衡 (4000m)</title>
+    <link rel="stylesheet" href="../assets/dive.css">
+</head>
+<body>
+    <main class="main-stage">
+        <span class="stage-badge">PROTOTYPE #4 // 4000M DEPTH</span>
+        <h1 class="stage-title">深渊层 · 水压配平</h1>
+        <p class="stage-desc">测试左右双舷气压阀门滑动调节与绿色安全区持续保持判定。</p>
+
+        <div class="pressure-deck">
+            <div class="pressure-gauges">
+                <div class="gauge-card">
+                    <span class="tele-label">PORT PRESSURE (左舷)</span>
+                    <div class="gauge-val-display" id="portVal">360 Bar</div>
+                    <div class="pressure-slider-wrap">
+                        <input type="range" class="valve-slider" id="portSlider" min="300" max="550" value="360">
+                    </div>
+                </div>
+                <div class="gauge-card">
+                    <span class="tele-label">STARBOARD PRESSURE (右舷)</span>
+                    <div class="gauge-val-display" id="stbdVal">490 Bar</div>
+                    <div class="pressure-slider-wrap">
+                        <input type="range" class="valve-slider" id="stbdSlider" min="300" max="550" value="490">
+                    </div>
+                </div>
+            </div>
+
+            <div class="stabilize-timer-bar">
+                <div class="stabilize-progress" id="stabBar"></div>
+            </div>
+        </div>
+
+        <div class="sub-terminal" id="terminalBox">
+            <div class="terminal-line warn">> 目标安全气压：420 ± 25 Bar (区间: 395 ~ 445 Bar)</div>
+        </div>
+    </main>
+
+    <script src="../assets/dive-config.js"></script>
+    <script src="../assets/dive-nav.js"></script>
+    <script>
+        const portSlider = document.getElementById("portSlider");
+        const stbdSlider = document.getElementById("stbdSlider");
+        const portVal = document.getElementById("portVal");
+        const stbdVal = document.getElementById("stbdVal");
+        const stabBar = document.getElementById("stabBar");
+        const term = document.getElementById("terminalBox");
+
+        const target = 420;
+        const tol = 25;
+        let stabProgress = 0;
+        let isSolved = false;
+
+        function checkSafe(val) {
+            return val >= (target - tol) && val <= (target + tol);
+        }
+
+        function updateGauges() {
+            if (isSolved) return;
+            const p = parseInt(portSlider.value);
+            const s = parseInt(stbdSlider.value);
+
+            portVal.textContent = p + " Bar";
+            stbdVal.textContent = s + " Bar";
+
+            const portSafe = checkSafe(p);
+            const stbdSafe = checkSafe(s);
+
+            portVal.className = "gauge-val-display " + (portSafe ? "is-safe" : "");
+            stbdVal.className = "gauge-val-display " + (stbdSafe ? "is-safe" : "");
+        }
+
+        portSlider.addEventListener("input", () => {
+            if (window.DiveAudio) DiveAudio.valveClick();
+            updateGauges();
+        });
+        stbdSlider.addEventListener("input", () => {
+            if (window.DiveAudio) DiveAudio.valveClick();
+            updateGauges();
+        });
+
+        // 持续判定循环
+        setInterval(() => {
+            if (isSolved) return;
+            const p = parseInt(portSlider.value);
+            const s = parseInt(stbdSlider.value);
+
+            if (checkSafe(p) && checkSafe(s)) {
+                stabProgress += 5;
+                if (stabProgress >= 100) {
+                    isSolved = true;
+                    stabProgress = 100;
+                    portSlider.disabled = true;
+                    stbdSlider.disabled = true;
+                    if (window.DiveAudio) DiveAudio.sonarUnlock();
+                    window.logTerminal(term, "双舷水压已完美配平！舱体处于安全耐压状态。", "success");
+                }
+            } else {
+                stabProgress = Math.max(0, stabProgress - 8);
+            }
+            stabBar.style.width = stabProgress + "%";
+        }, 80);
+    </script>
+</body>
+</html>
+

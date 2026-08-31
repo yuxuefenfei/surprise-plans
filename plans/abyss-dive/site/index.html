@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0a2540">
+    <title>深海记忆潜航 · 浅海启航 (0m)</title>
+    <link rel="stylesheet" href="../assets/dive.css">
+    <style>
+        .cockpit-hero {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .flood-control-panel {
+            background: rgba(2, 9, 18, 0.88);
+            border: 1px solid rgba(0, 245, 212, 0.28);
+            border-radius: var(--radius-hud);
+            padding: 26px;
+            margin: 20px 0;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .ballast-tank-meter {
+            width: 100%;
+            height: 18px;
+            background: rgba(0, 0, 0, 0.65);
+            border: 1px solid var(--c-accent);
+            border-radius: 9px;
+            overflow: hidden;
+            margin: 14px 0 20px;
+            position: relative;
+        }
+
+        .ballast-tank-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #00f5d4 0%, #38ef7d 100%);
+            box-shadow: 0 0 14px rgba(0, 245, 212, 0.55);
+            transition: width 0.1s linear;
+        }
+
+        .ballast-label {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--c-text-dim);
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+    <main class="main-stage">
+        <div class="cockpit-hero">
+            <span class="stage-badge">STAGE 00 // SURFACE DEPTH 0M</span>
+            <h1 class="stage-title" id="headlineText">浅海启航 · 喧嚣的断点</h1>
+            <p class="stage-desc" id="introText"></p>
+        </div>
+
+        <div class="sub-terminal" id="terminalBox" aria-live="polite"></div>
+
+        <div class="flood-control-panel">
+            <div class="ballast-label">
+                <span>主压载水舱注水率 (BALLAST FLOODING)</span>
+                <span id="floodPercent" style="color: var(--c-accent); font-weight: bold;">0%</span>
+            </div>
+            <div class="ballast-tank-meter">
+                <div class="ballast-tank-fill" id="ballastFill"></div>
+            </div>
+            
+            <button class="btn-primary" id="fillBtn">
+                <span id="btnText">注入压载水 · 启动下潜 (Flooding)</span>
+            </button>
+            <a class="btn-primary" id="nextStageBtn" href="./01-twilight.html" style="display: none;">
+                下潜至 200m 微光层 ➔
+            </a>
+        </div>
+    </main>
+
+    <script src="../assets/dive-config.js"></script>
+    <script src="../assets/dive-nav.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            const pageData = DIVE_CONFIG.pages.surface;
+            const vessel = DIVE_CONFIG.vesselId;
+            const diver = DIVE_CONFIG.diverName;
+
+            const headline = document.getElementById("headlineText");
+            const intro = document.getElementById("introText");
+            const term = document.getElementById("terminalBox");
+            const fillBtn = document.getElementById("fillBtn");
+            const nextBtn = document.getElementById("nextStageBtn");
+            const ballastFill = document.getElementById("ballastFill");
+            const floodPercent = document.getElementById("floodPercent");
+
+            headline.textContent = pageData.headline;
+            const formattedIntro = pageData.intro
+                .replaceAll("{vessel}", vessel)
+                .replaceAll("{diver}", diver);
+            intro.textContent = formattedIntro;
+
+            // 打印系统日志
+            for (const log of pageData.systemLog) {
+                const text = log.text.replaceAll("{vessel}", vessel).replaceAll("{diver}", diver);
+                window.logTerminal(term, text, log.type);
+                await new Promise(r => setTimeout(r, 120));
+            }
+
+            let isFlooding = false;
+            let percent = 0;
+
+            fillBtn.addEventListener("click", () => {
+                if (isFlooding) return;
+                isFlooding = true;
+                fillBtn.disabled = true;
+                document.getElementById("btnText").textContent = pageData.fillingText;
+                window.logTerminal(term, "开始向主压载水舱注入海水... 深度计重力传感器已激活", "warn");
+
+                const interval = setInterval(() => {
+                    percent += 2;
+                    ballastFill.style.width = percent + "%";
+                    floodPercent.textContent = percent + "%";
+
+                    if (percent % 10 === 0 && window.DiveAudio) {
+                        DiveAudio.bubblePop();
+                    }
+
+                    if (percent >= 100) {
+                        clearInterval(interval);
+                        fillBtn.style.display = "none";
+                        nextBtn.style.display = "inline-flex";
+                        document.getElementById("btnText").textContent = pageData.filledText;
+
+                        window.logTerminal(term, "压载水注入完成 (100%)，深潜器重力配平达成", "success");
+                        window.logTerminal(term, "外壳密封检测通过，下潜通道开启！点击下方按钮潜入微光层。", "success");
+                        
+                        if (window.DiveAudio) DiveAudio.sonarUnlock();
+                    }
+                }, 35);
+            });
+        });
+    </script>
+</body>
+</html>

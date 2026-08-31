@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>原型 5：挑战者深渊万米探照灯与彩蛋 (10000m)</title>
+    <link rel="stylesheet" href="../assets/dive.css">
+</head>
+<body>
+    <main class="main-stage">
+        <span class="stage-badge">PROTOTYPE #5 // 10,928M DEPTH</span>
+        <h1 class="stage-title">挑战者深渊 · 终极回响</h1>
+        <p class="stage-desc">测试万米主探照灯充能聚光、打字机打印报告与隐藏彩蛋点击交互。</p>
+
+        <div class="searchlight-chamber">
+            <div class="searchlight-beam" id="beam"></div>
+            <button class="btn-primary" id="lightBtn">启动万米主探照灯</button>
+
+            <div class="deep-verdict-card" id="verdictCard">
+                <span class="stage-badge" style="border-color: var(--c-accent);">深渊科考最终结案</span>
+                <div id="verdictBody" style="line-height: 2; margin: 16px 0; font-size: 1.05rem;"></div>
+                <div style="font-size: 0.85rem; color: var(--c-warn);" id="eggHint"></div>
+            </div>
+        </div>
+
+        <div class="sub-terminal" id="terminalBox">
+            <div class="terminal-line info">> 已抵达地球最深处 (10,928m)</div>
+        </div>
+    </main>
+
+    <!-- 彩蛋弹窗 -->
+    <div class="egg-modal" id="eggModal">
+        <div class="egg-box">
+            <span class="stage-badge" style="border-color: var(--c-warn); color: var(--c-warn);">海底真心话彩蛋</span>
+            <p id="eggText" style="color: #fff; font-size: 1.05rem; line-height: 1.8; margin: 16px 0;"></p>
+            <button class="btn-primary" id="eggCloseBtn">收起真心话</button>
+        </div>
+    </div>
+
+    <script src="../assets/dive-config.js"></script>
+    <script src="../assets/dive-nav.js"></script>
+    <script>
+        const lightBtn = document.getElementById("lightBtn");
+        const beam = document.getElementById("beam");
+        const verdictCard = document.getElementById("verdictCard");
+        const verdictBody = document.getElementById("verdictBody");
+        const eggHint = document.getElementById("eggHint");
+        const term = document.getElementById("terminalBox");
+
+        const eggModal = document.getElementById("eggModal");
+        const eggText = document.getElementById("eggText");
+        const eggCloseBtn = document.getElementById("eggCloseBtn");
+
+        const pageData = DIVE_CONFIG.pages.challenger;
+
+        lightBtn.addEventListener("click", async () => {
+            lightBtn.disabled = true;
+            if (window.DiveAudio) DiveAudio.searchlightIgnite();
+            beam.classList.add("is-lit");
+            window.logTerminal(term, "万米超高亮探照灯充能聚光...", "warn");
+
+            setTimeout(async () => {
+                lightBtn.style.display = "none";
+                verdictCard.classList.add("is-visible");
+                if (window.DiveAudio) DiveAudio.sonarUnlock();
+
+                let fullText = pageData.verdictLines.join("<br><br>");
+                // 替换彩蛋触发词
+                pageData.easterEggs.forEach(egg => {
+                    fullText = fullText.replaceAll(egg.word, `<span class="egg-trigger" data-word="${egg.word}">${egg.word}</span>`);
+                });
+
+                verdictBody.innerHTML = fullText;
+                eggHint.textContent = pageData.deepScanHint;
+
+                // 绑定彩蛋点击
+                document.querySelectorAll(".egg-trigger").forEach(el => {
+                    el.addEventListener("click", () => {
+                        const w = el.dataset.word;
+                        const match = pageData.easterEggs.find(e => e.word === w);
+                        if (match) {
+                            if (window.DiveAudio) DiveAudio.harmonicChime(659);
+                            eggText.textContent = match.reveal;
+                            eggModal.classList.add("is-open");
+                        }
+                    });
+                });
+
+                window.logTerminal(term, "深渊结案词打印完毕，深度扫描模式已启动。", "success");
+            }, 1200);
+        });
+
+        eggCloseBtn.addEventListener("click", () => {
+            eggModal.classList.remove("is-open");
+        });
+    </script>
+</body>
+</html>
+
